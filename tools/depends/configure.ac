@@ -333,7 +333,7 @@ case $host in
           platform_cflags+=" -fembed-bitcode"
           platform_cxxflags+=" -fembed-bitcode"
           sdk_name=$target_platform$use_sdk
-          platform_min_version="$target_platform-version-min=9.0"
+          platform_min_version="$target_platform-version-min=10.2"
         else
           # setup which cpu to use
           if test "x$use_cpu" = "xauto"; then
@@ -347,6 +347,7 @@ case $host in
           sdk_name=$target_platform$use_sdk
           platform_min_version="$target_platform-version-min=9.0"
         fi
+        
         case $use_sdk in
           9.*);;
           10.*);;
@@ -372,6 +373,8 @@ case $host in
         platform_cxxflags+=" $cpu_flags"
       ;;
     esac
+    
+
     platform_cflags+=" -arch $use_cpu -m$platform_min_version"
     platform_ldflags+=" -arch $use_cpu -m$platform_min_version -isysroot $use_sdk_path -stdlib=libc++"
     platform_cxxflags+=" -arch $use_cpu -m$platform_min_version -stdlib=libc++"
@@ -419,6 +422,8 @@ case $use_platform in
      platform_cxxflags="-fPIC -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mvectorize-with-neon-quad"
      platform_ldflags="-lpthread"
      ;;
+  tvos)
+    ;;
   auto)
     ;;
   *)

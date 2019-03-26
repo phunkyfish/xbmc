@@ -13,7 +13,13 @@ ifeq ($(OS), android)
   CONFIGURE=./Configure no-shared zlib --prefix=$(PREFIX) --with-zlib-include=$(PREFIX)/include --with-zlib-lib=$(PREFIX)/lib linux-generic32 -D__ANDROID_API__=$(NDK_LEVEL)
 endif
 ifeq ($(OS), ios)
-  CONFIGURE=./Configure iphoneos-cross no-shared zlib no-asm --prefix=$(PREFIX)
+
+  ifeq ($(TARGET_PLATFORM),appletvos)
+  	# Need to add "no-async" to avoid "'setcontext' is unavailable: not available on tvOS" error
+  	CONFIGURE=./Configure iphoneos-cross no-shared zlib no-asm no-async --prefix=$(PREFIX)
+  else
+  	CONFIGURE=./Configure iphoneos-cross no-shared zlib no-asm --prefix=$(PREFIX)
+  endif
 endif
 ifeq ($(OS), osx)
   ifeq ($(CPU),x86_64)
@@ -44,6 +50,13 @@ $(PLATFORM): $(TARBALLS_LOCATION)/$(ARCHIVE) $(DEPS)
 		sed -ie "s|-isysroot \$$(CROSS_TOP)/SDKs/\$$(CROSS_SDK) ||" "$(PLATFORM)/Makefile"; \
 		sed -ie "s|static volatile sig_atomic_t intr_signal;|static volatile intr_signal;|" "$(PLATFORM)/crypto/ui/ui_openssl.c"; \
 	fi
+
+	# Stolen pathes here: https://gist.github.com/felix-schwarz/c61c0f7d9ab60f53ebb0 
+	if test "$(TARGET_PLATFORM)" = "appletvos"; then \
+		sed -i -- 's/define HAVE_FORK 1/define HAVE_FORK 0/' "$(PLATFORM)/apps/speed.c"; \
+		sed -i -- 's/D\_REENTRANT\:iOS/D\_REENTRANT\:tvOS/' "$(PLATFORM)/Configure"; \
+    fi
+
 	sed -ie "s|apps test||" "$(PLATFORM)/Makefile"; \
 
 $(LIBDYLIB): $(PLATFORM)
