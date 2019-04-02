@@ -320,6 +320,8 @@ case $host in
         MC_CHECK_NOT_CPU([$use_cpu], "*86")
 
         # setup which sdk to use
+
+        # If tvOS
         if test "$use_platform" = "tvos"; then
           # setup which cpu to use
           if test "x$use_cpu" = "xauto"; then
@@ -334,6 +336,18 @@ case $host in
           platform_cxxflags+=" -fembed-bitcode"
           sdk_name=$target_platform$use_sdk
           platform_min_version="$target_platform-version-min=10.2"
+
+          case $use_sdk in
+            10.2);;
+            10.2.*);;
+            11.*);;
+            12.*);;
+            *)
+              AC_MSG_ERROR(error in configure of --with-sdk=$use_sdk)
+              ;;
+          esac
+        
+        # If not tvOS (= iOS)
         else
           # setup which cpu to use
           if test "x$use_cpu" = "xauto"; then
@@ -346,17 +360,19 @@ case $host in
           use_sdk="${use_sdk:-$found_sdk_version}"
           sdk_name=$target_platform$use_sdk
           platform_min_version="$target_platform-version-min=9.0"
-        fi
-        
-        case $use_sdk in
-          9.*);;
-          10.*);;
-          11.*);;
-          12.*);;
+
+          case $use_sdk in
+            9.*);;
+            10.*);;
+            11.*);;
+            12.*);;
             *)
               AC_MSG_ERROR(error in configure of --with-sdk=$use_sdk)
-            ;;
-        esac
+              ;;
+          esac
+
+        fi
+        
 
         platform_os="ios"
 
