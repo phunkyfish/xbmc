@@ -3,9 +3,13 @@ PLATFORM=$(NATIVEPLATFORM)
 DEPS= ../../Makefile.include Makefile
 
 APPNAME=cmake
-VERSION=3.12.2
+#VERSION=3.12.2
+VERSION=3.14.1
 SOURCE=$(APPNAME)-$(VERSION)
 ARCHIVE=$(SOURCE).tar.gz
+
+# cmake 3.14.1 is not on Kodi mirror yet so we use the official GitHub release URL
+BASE_URL=https://github.com/Kitware/CMake/releases/download/v3.14.1
 
 # configuration settings
 
