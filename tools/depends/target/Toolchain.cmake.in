@@ -33,7 +33,8 @@ elseif(OS STREQUAL osx)
 elseif(OS STREQUAL ios)
   
   if(PLATFORM STREQUAL appletvos)
-    set(CMAKE_SYSTEM_NAME tvOS)
+    #set(CMAKE_SYSTEM_NAME tvOS)
+    set(CMAKE_SYSTEM_NAME Darwin)
     set(CORE_SYSTEM_NAME ios)
   else()
     set(CMAKE_SYSTEM_NAME Darwin)
@@ -42,30 +43,33 @@ elseif(OS STREQUAL ios)
 endif()
 
 if(CORE_SYSTEM_NAME STREQUAL ios)
-
-  if(PLATFORM STREQUAL "appletvos")
-    set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
-  else()
-
     # Necessary to build the main Application (but not other dependencies)
     # with Xcode (and a bundle with Makefiles) (https://cmake.org/Bug/view.php?id=15329)
     if(NOT PROJECT_SOURCE_DIR MATCHES "tools/depends")
-      message(STATUS "Toolchain enabled IOS bundle for project ${PROJECT_NAME}")
-      set(CMAKE_MACOSX_BUNDLE YES)
-      set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+      if(PLATFORM STREQUAL "appletvos")
 
-      # set this to YES once we have a deployment target of at least iOS 6.0
-      set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
+        message(STATUS "Toolchain enabled TVOS bundle for project ${PROJECT_NAME}")
+        set(CMAKE_MACOSX_BUNDLE YES)
+        set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+
+        # set this to YES once we have a deployment target of at least iOS 6.0
+        set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE "YES")
+        set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+        
+      else()
+
+        message(STATUS "Toolchain enabled IOS bundle for project ${PROJECT_NAME}")
+        set(CMAKE_MACOSX_BUNDLE YES)
+        set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+
+        # set this to YES once we have a deployment target of at least iOS 6.0
+        set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
+      endif()
     endif()
-  endif()
 endif()
 
-if(CORE_SYSTEM_NAME STREQUAL ios OR CORE_SYSTEM_NAME STREQUAL osx)
-  if(PLATFORM STREQUAL appletvos)
-    
-  else()
-    set(CMAKE_OSX_SYSROOT @use_sdk_path@)
-  endif()
+if(CORE_SYSTEM_NAME STREQUAL ios OR CORE_SYSTEM_NAME STREQUAL osx)    
+  set(CMAKE_OSX_SYSROOT @use_sdk_path@)
 endif()
 set(CMAKE_SYSTEM_VERSION 1)
 
