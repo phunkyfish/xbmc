@@ -21,7 +21,7 @@ void CProcessInfoTVOS::Register()
   CProcessInfo::RegisterProcessControl("tvos", CProcessInfoTVOS::Create);
 }
 
-void CProcessInfoIOS::SetSwDeinterlacingMethods()
+void CProcessInfoTVOS::SetSwDeinterlacingMethods()
 {
   // first populate with the defaults from base implementation
   CProcessInfo::SetSwDeinterlacingMethods();
@@ -32,7 +32,7 @@ void CProcessInfoIOS::SetSwDeinterlacingMethods()
     CSingleLock lock(m_videoCodecSection);
     methods = m_deintMethods;
   }
-  // add bob deinterlacer for ios
+  // add bob deinterlacer for tvos
   methods.push_back(EINTERLACEMETHOD::VS_INTERLACEMETHOD_RENDER_BOB);
 
   // update with the new methods list

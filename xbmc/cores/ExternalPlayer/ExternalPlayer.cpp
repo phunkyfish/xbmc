@@ -447,7 +447,7 @@ bool CExternalPlayer::ExecuteAppW32(const char* strPath, const char* strSwitches
 }
 #endif
 
-#if !defined(TARGET_ANDROID) && !defined(TARGET_DARWIN_IOS) && (defined(TARGET_POSIX) || defined(TARGET_DARWIN_OSX))
+#if !defined(TARGET_ANDROID) && !defined(TARGET_DARWIN_IOS) && !defined(TARGET_DARWIN_TVOS) && (defined(TARGET_POSIX) || defined(TARGET_DARWIN_OSX))
 bool CExternalPlayer::ExecuteAppLinux(const char* strSwitches)
 {
   CLog::Log(LOGNOTICE, "%s: %s", __FUNCTION__, strSwitches);

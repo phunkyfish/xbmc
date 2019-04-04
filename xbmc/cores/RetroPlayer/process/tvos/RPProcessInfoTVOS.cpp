@@ -6,7 +6,7 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "RPProcessInfoIOS.h"
+#include "RPProcessInfoTVOS.h"
 
 using namespace KODI;
 using namespace RETRO;

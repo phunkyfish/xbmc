@@ -7,7 +7,7 @@
  */
 
 #if defined(TARGET_DARWIN)
-#if defined(TARGET_DARWIN_IOS)
+#if defined(TARGET_DARWIN_IOS) || defined(TARGET_DARWIN_TVOS)
   #import <Foundation/Foundation.h>
 #else
   #import <Cocoa/Cocoa.h>

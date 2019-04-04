@@ -14,7 +14,7 @@
 #include "CompileInfo.h"
 
 #if defined(TARGET_DARWIN)
-#if defined(TARGET_DARWIN_IOS)
+#if defined(TARGET_DARWIN_IOS) || defined(TARGET_DARWIN_TVOS)
   #import <Foundation/Foundation.h>
   #import <UIKit/UIKit.h>
   #import <mach/mach_host.h>
@@ -468,6 +468,7 @@ bool CDarwinUtils::IsIosSandboxed(void)
 int CDarwinUtils::BatteryLevel(void)
 {
   float batteryLevel = 0;
+#if !defined(TARGET_DARWIN_TVOS)
 #if defined(TARGET_DARWIN_IOS)
   batteryLevel = [[UIDevice currentDevice] batteryLevel];
 #else
@@ -497,6 +498,7 @@ int CDarwinUtils::BatteryLevel(void)
   }
   CFRelease(powerSources);
   CFRelease(powerSourceInfo);
+#endif
 #endif
   return batteryLevel * 100;
 }

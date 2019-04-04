@@ -1,17 +1,18 @@
-set(SOURCES IOSEAGLView.mm
-            IOSExternalTouchController.mm
-            IOSKeyboard.mm
-            IOSKeyboardView.mm
-            IOSScreenManager.mm
-            XBMCController.mm)
+set(SOURCES MainApplication.mm 
+            MainController.mm   
+            MainEAGLView.mm     
+            MainKeyboard.mm     
+            MainKeyboardView.mm 
+            TVOSSettingsHandler.mm
+            TVOSTopShelf.mm)
 
-set(HEADERS IOSEAGLView.h
-            IOSExternalTouchController.h
-            IOSKeyboard.h
-            IOSKeyboardView.h
-            IOSScreenManager.h
-            XBMCApplication.h
-            XBMCController.h
-            XBMCDebugHelpers.h)
+set(HEADERS MainApplication.h     
+            MainController.h      
+            MainEAGLView.h        
+            MainKeyboard.h        
+            MainKeyboardView.h    
+            TVOSSettingsHandler.h 
+            TVOSTopShelf.h        
+            tvosShared.h)
 
 core_add_library(platform_tvos)
