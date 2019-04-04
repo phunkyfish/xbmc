@@ -23,8 +23,10 @@ if(CORE_SYSTEM_NAME STREQUAL ios)
 endif()
 
 if(CORE_SYSTEM_NAME STREQUAL tvos)
-  set(SOURCES WinEventsTVOS.mm)
-  set(HEADERS WinEventsTVOS.h)
+  set(SOURCES WinEventsTVOS.mm
+              WinSystemTVOS.mm)
+  set(HEADERS WinEventsTVOS.h
+              WinSystemTVOS.h)
 endif()
 
 core_add_library(windowing_osx)

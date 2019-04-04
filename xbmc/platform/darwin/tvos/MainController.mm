@@ -30,7 +30,9 @@
 #include "cores/AudioEngine/Interfaces/AE.h"
 
 #include "input/CustomControllerTranslator.h"
-#import "guilib/GUIWindowManager.h"
+#include "guilib/GUIWindowManager.h"
+#include "guilib/GUIComponent.h"
+
 #import "input/Key.h"
 #import "input/ButtonTranslator.h"
 #import "input/InputManager.h"
@@ -50,6 +52,7 @@
 #include "utils/log.h"
 //#import "windowing/WindowingFactory.h"
 #include "windowing/osx/WinEventsTVOS.h"
+#include "windowing/osx/WinSystemTVOS.h"
 
 #import <MediaPlayer/MPMediaItem.h>
 #import <MediaPlayer/MPNowPlayingInfoCenter.h>
@@ -146,17 +149,19 @@ MainController *g_xbmcController;
   newEvent.key.keysym.sym = key;
 
   newEvent.type = XBMC_KEYDOWN;
-  CWinEvents::MessagePush(&newEvent);
+  CWinSystemTVOS* winSystem(dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem()));
+  winSystem->MessagePush(&newEvent);
 
   newEvent.type = XBMC_KEYUP;
-  CWinEvents::MessagePush(&newEvent);
+  winSystem->MessagePush(&newEvent);
 }
 - (void)sendKeyDown:(XBMCKey)key
 {
   XBMC_Event newEvent = {0};
   newEvent.type = XBMC_KEYDOWN;
   newEvent.key.keysym.sym = key;
-  CWinEvents::MessagePush(&newEvent);
+  CWinSystemTVOS* winSystem(dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem()));
+  winSystem->MessagePush(&newEvent);
 }
 
 #pragma mark - remote idle timer
@@ -257,7 +262,8 @@ MainController *g_xbmcController;
 {
   //PRINT_SIGNATURE();
   // if queue is empty - skip this timer event before letting it process
-  if (CWinEvents::GetQueueSize())
+  CWinSystemTVOS* winSystem(dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem()));
+  if (winSystem->GetQueueSize())
     return;
 
   NSNumber *keyId = [theTimer userInfo];
@@ -334,7 +340,8 @@ MainController *g_xbmcController;
 -(BOOL) shouldFastScroll
 {
   // we dont want fast scroll in below windows, no point in going 15 places in home screen
-  int window = g_windowManager.GetActiveWindow();
+  //int window = g_windowManager.GetActiveWindow();
+    int window = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow();
   
   if (window == WINDOW_HOME ||
       window == WINDOW_FULLSCREEN_LIVETV ||
@@ -416,7 +423,8 @@ MainController *g_xbmcController;
       // menu is special.
       //  a) if at our home view, should return to atv home screen.
       //  b) if not, let it pass to us.
-      if (g_windowManager.GetFocusedWindow() == WINDOW_HOME && !g_application.m_pPlayer->IsPlaying())
+      //if (CServiceBroker::GetGUI()->GetWindowManager().GetFocusedWindow() == WINDOW_HOME && !g_application.GetAppPlayer().IsPlaying())
+        if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_HOME && !g_application.GetAppPlayer().IsPlaying())
         handled = NO;
       break;
 
@@ -1425,13 +1433,14 @@ MainController *g_xbmcController;
   XbmcThreads::EndTime timer(4500);
 
   // this should not be required as we 'should' get becomeInactive before enterBackground
-  if (g_application.m_pPlayer->IsPlaying() && !g_application.m_pPlayer->IsPaused())
+  if (g_application.GetAppPlayer().IsPlaying() && !g_application.GetAppPlayer().IsPaused())
   {
     m_isPlayingBeforeInactive = YES;
     CApplicationMessenger::GetInstance().SendMsg(TMSG_MEDIA_PAUSE_IF_PLAYING);
   }
 
-  g_Windowing.OnAppFocusChange(false);
+  CWinSystemTVOS* winSystem = dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem());
+  winSystem->OnAppFocusChange(false);
 
   // Apple says to disable ZeroConfig when moving to background
   CNetworkServices::GetInstance().StopZeroconf();
@@ -1462,10 +1471,11 @@ MainController *g_xbmcController;
 {
   // MCRuntimeLib_Initialized is only true if
   // we were running and got moved to background
-  while(!g_application.IsAppInitialized())
+    while(!g_application.IsInitialized())
     usleep(50*1000);
 
-  g_Windowing.OnAppFocusChange(true);
+  CWinSystemTVOS* winSystem = dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem());
+  winSystem->OnAppFocusChange(true);
 
   // when we come back, restore playing if we were.
   if (m_isPlayingBeforeInactive)
@@ -1474,14 +1484,15 @@ MainController *g_xbmcController;
     m_isPlayingBeforeInactive = NO;
   }
   // restart ZeroConfig (if stopped)
-  CNetworkServices::GetInstance().StartZeroconf();
+  // TODO
+    //CNetworkServices::GetInstance().StartZeroconf();
 
   // do not update if we are already updating
   if (!(g_application.IsVideoScanning() || g_application.IsMusicScanning()))
     g_application.UpdateLibraries();
 
   // this will fire only if we are already alive and have 'menu'ed out and back
-  ANNOUNCEMENT::CAnnouncementManager::GetInstance().Announce(ANNOUNCEMENT::System, "xbmc", "OnWake");
+  CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::System, "xbmc", "OnWake");
 
   // this handles what to do if we got pushed
   // into foreground by a topshelf item select/play
@@ -1501,8 +1512,8 @@ MainController *g_xbmcController;
 {
   // if we were interrupted, already paused here
   // else if user background us or lock screen, only pause video here, audio keep playing.
-  if (g_application.m_pPlayer->IsPlayingVideo() &&
-     !g_application.m_pPlayer->IsPaused())
+    if (g_application.GetAppPlayer().IsPlayingVideo() &&
+     !g_application.GetAppPlayer().IsPaused())
   {
     m_isPlayingBeforeInactive = YES;
     CApplicationMessenger::GetInstance().SendMsg(TMSG_MEDIA_PAUSE_IF_PLAYING);
@@ -1539,7 +1550,7 @@ MainController *g_xbmcController;
   //--------------------------------------------------------------
   - (void)displayRateSwitch:(float)refreshRate withDynamicRange:(int)dynamicRange
   {
-    if (CSettings::GetInstance().GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF)
+    if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF)
     {
       if (__builtin_available(tvOS 11.2, *))
       {
@@ -1601,7 +1612,7 @@ MainController *g_xbmcController;
   - (void)displayRateReset
   {
     PRINT_SIGNATURE();
-    if (CSettings::GetInstance().GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF)
+    if (CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CSettings::SETTING_VIDEOPLAYER_ADJUSTREFRESHRATE) != ADJUST_REFRESHRATE_OFF)
     {
       if (__builtin_available(tvOS 11.2, *))
       {
@@ -1642,14 +1653,16 @@ MainController *g_xbmcController;
           if ([avDisplayManager isDisplayModeSwitchInProgress] == YES)
           {
             switchState = "YES";
-            g_Windowing.AnnounceOnLostDevice();
-            g_Windowing.StartLostDeviceTimer();
+            CWinSystemTVOS* winSystem = dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem());
+            winSystem->AnnounceOnLostDevice();
+            winSystem->StartLostDeviceTimer();
           }
           else
           {
             switchState = "DONE";
-            g_Windowing.StopLostDeviceTimer();
-            g_Windowing.AnnounceOnResetDevice();
+            CWinSystemTVOS* winSystem = dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem());
+            winSystem->StopLostDeviceTimer();
+            winSystem->AnnounceOnResetDevice();
             // displayLinkTick is tracking actual refresh duration.
             // when isDisplayModeSwitchInProgress == NO, we have switched
             // and stablized. We might have switched to some other
@@ -1868,7 +1881,7 @@ int KODI_Run(bool renderGUI)
       case UIEventSubtypeRemoteControlEndSeekingForward:
       case UIEventSubtypeRemoteControlEndSeekingBackward:
         // restore to normal playback speed.
-        if (g_application.m_pPlayer->IsPlaying() && !g_application.m_pPlayer->IsPaused())
+        if (g_application.GetAppPlayer().IsPlaying() && !g_application.GetAppPlayer().IsPaused())
           CApplicationMessenger::GetInstance().PostMsg(TMSG_GUI_ACTION, WINDOW_INVALID, -1, static_cast<void*>(new CAction(ACTION_PLAYER_PLAY)));
         break;
       default:

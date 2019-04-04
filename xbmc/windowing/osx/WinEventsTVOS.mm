@@ -20,6 +20,19 @@ static CCriticalSection g_inputCond;
 
 static std::list<XBMC_Event> events;
 
+CWinEventsTVOS::CWinEventsTVOS()
+: CThread("CWinEventsTVOS")
+{
+    CLog::Log(LOGDEBUG, "CWinEventsAndroid::CWinEventsTVOS");
+    Create();
+}
+
+CWinEventsTVOS::~CWinEventsTVOS()
+{
+    m_bStop = true;
+    StopThread(true);
+}
+
 void CWinEventsTVOS::MessagePush(XBMC_Event *newEvent)
 {
     CSingleLock lock(m_eventsCond);
