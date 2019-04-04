@@ -329,6 +329,7 @@ case $host in
           fi
 
           target_platform=appletvos
+          platform_os="tvos"
 
           found_sdk_version=[`$use_xcodebuild -showsdks | grep $target_platform | sort | tail -n 1 | awk '{ print $2}'`]
           use_sdk="${use_sdk:-$found_sdk_version}"
@@ -355,6 +356,7 @@ case $host in
           fi
 
           target_platform=iphoneos
+          platform_os="ios"
 
           found_sdk_version=[`$use_xcodebuild -showsdks | grep $target_platform | sort | tail -n 1 | awk '{ print $2}'`]
           use_sdk="${use_sdk:-$found_sdk_version}"
@@ -373,9 +375,8 @@ case $host in
 
         fi
         
-
-        platform_os="ios"
-
+        
+        # Common to tvos and ios?
         if [ ! test "x$use_cpu" = "xarm64" ]; then
           platform_cflags+=" -mcpu=cortex-a8 -mfpu=neon"
           platform_ldflags+=" -Wl,-segalign,4000"
@@ -577,13 +578,13 @@ if test "$platform_os" == "android"; then
 fi
 
 # darwin needs unzip/zip in Codesign.command
-if test "$platform_os" = "android" || test "$platform_os" = "osx" || test "$platform_os" = "ios"; then
+if test "$platform_os" = "android" || test "$platform_os" = "osx" || test "$platform_os" = "ios" || test "$platform_os" = "tvos"; then
   AC_CHECK_PROG(HAVE_UNZIP,unzip,"yes","no",)
   if test "x$HAVE_UNZIP" = "xno"; then
     AC_MSG_ERROR("Missing program: unzip")
   fi
 fi
-if test "$platform_os" = "osx" || test "$platform_os" = "ios"; then
+if test "$platform_os" = "osx" || test "$platform_os" = "ios" || test "$platform_os" = "tvos"; then
   AC_CHECK_PROG(HAVE_ZIP,zip,"yes","no",)
   if test "x$HAVE_ZIP" = "xno"; then
     AC_MSG_ERROR("Missing program: zip")
@@ -630,7 +631,7 @@ tmp_cxxflags=$(echo $cxx11_flags $platform_cxxflags | sed 's/-O@<:@123@:>@//g;s/
 release_cflags="-DNDEBUG=1"
 
 # newer xcode version accept -Og flag, but debugging doesn't work with it
-if test "$platform_os" = "osx" || test "$platform_os" = "ios"; then
+if test "$platform_os" = "osx" || test "$platform_os" = "ios" || test "$platform_os" = "tvos"; then
   debug_cflags="-g -D_DEBUG"
 else
   CFLAGS="$tmp_cflags -Og -g -D_DEBUG"
@@ -700,13 +701,15 @@ AC_SUBST(ffmpeg_options)
 AC_OUTPUT
 
 if test "$platform_os" == "ios"; then
-  if test "$use_platform" = "tvos"; then
-    simulator_sdk_path=[`$use_xcodebuild -version -sdk appletvsimulator$use_sdk  | grep ^Path | awk '{ print $2}'`]
-  else
-    simulator_sdk_path=[`$use_xcodebuild -version -sdk iphonesimulator$use_sdk  | grep ^Path | awk '{ print $2}'`]
-  fi
+  simulator_sdk_path=[`$use_xcodebuild -version -sdk iphonesimulator$use_sdk  | grep ^Path | awk '{ print $2}'`]
   cp -vf $simulator_sdk_path/usr/include/crt_externs.h $prefix/$deps_dir/include
 fi
+
+if test "$platform_os" == "tvos"; then
+  simulator_sdk_path=[`$use_xcodebuild -version -sdk appletvsimulator$use_sdk  | grep ^Path | awk '{ print $2}'`]
+  cp -vf $simulator_sdk_path/usr/include/crt_externs.h $prefix/$deps_dir/include
+fi
+
 echo -e "use simulator:\t $use_simulator"
 
 if test "x$has_localeconv" == "xno" && test "$platform_os" == "android"; then
