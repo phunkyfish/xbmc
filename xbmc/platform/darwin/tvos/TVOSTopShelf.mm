@@ -38,6 +38,7 @@
 #include "filesystem/File.h"
 
 #include "utils/log.h"
+#include "guilib/LocalizeStrings.h"
 #include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/Base64.h"
@@ -204,11 +205,11 @@ void CTVOSTopShelf::RunTopShelf()
     
     std::vector<std::string> split = StringUtils::Split(m_url, "/");
     
-    std::string url =Base64::Decode(split[4]);
+    std::string url = Base64::Decode(split[4]);
     
     if (split[2] == "display")
     {
-      KODI::MESSAGING::CApplicationMessenger::GetInstance().PostMsg(TMSG_GUI_SHOW_VIDEO_INFO, -1, -1, static_cast<void*>(new CFileItem(url.c_str(), false)));
+      KODI::MESSAGING::CApplicationMessenger::GetInstance().PostMsg(TMSG_MASK_WINDOWMANAGER + 9, -1, -1, static_cast<void*>(new CFileItem(url.c_str(), false)));
     }
     else //play
     {

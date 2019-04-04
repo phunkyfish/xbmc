@@ -30,7 +30,7 @@
 
 #import "system.h"
 
-#import "AdvancedSettings.h"
+#include "settings/AdvancedSettings.h"
 #import "messaging/ApplicationMessenger.h"
 #import "utils/log.h"
 #undef BOOL

@@ -31,6 +31,9 @@
 #include "platform/darwin/DarwinUtils.h"
 #endif
 #if defined(TARGET_DARWIN_IOS)
+#if defined(TARGET_DARWIN_TVOS)
+#include "platform/darwin/tvos/TVOSSettingsHandler.h"
+#endif
 #include "SettingAddon.h"
 #endif
 #if defined(TARGET_RASPBERRY_PI)
@@ -371,6 +374,9 @@ const std::string CSettings::SETTING_INPUT_CONTROLLERPOWEROFF = "input.controlle
 const std::string CSettings::SETTING_INPUT_APPLEREMOTEMODE = "input.appleremotemode";
 const std::string CSettings::SETTING_INPUT_APPLEREMOTEALWAYSON = "input.appleremotealwayson";
 const std::string CSettings::SETTING_INPUT_APPLEREMOTESEQUENCETIME = "input.appleremotesequencetime";
+const std::string CSettings::SETTING_INPUT_APPLESIRI = "input.applesiri";
+const std::string CSettings::SETTING_INPUT_APPLESIRITIMEOUT = "input.applesiritimeout";
+const std::string CSettings::SETTING_INPUT_APPLESIRITIMEOUTENABLED = "input.applesiritimeoutenabled";
 const std::string CSettings::SETTING_NETWORK_USEHTTPPROXY = "network.usehttpproxy";
 const std::string CSettings::SETTING_NETWORK_HTTPPROXYTYPE = "network.httpproxytype";
 const std::string CSettings::SETTING_NETWORK_HTTPPROXYSERVER = "network.httpproxyserver";
@@ -922,6 +928,14 @@ void CSettings::InitializeISettingCallbacks()
   settingSet.insert(CSettings::SETTING_INPUT_APPLEREMOTEMODE);
   settingSet.insert(CSettings::SETTING_INPUT_APPLEREMOTEALWAYSON);
   GetSettingsManager()->RegisterCallback(&XBMCHelper::GetInstance(), settingSet);
+#endif
+    
+#if defined(TARGET_DARWIN_TVOS)
+  settingSet.clear();
+  settingSet.insert(CSettings::SETTING_INPUT_APPLESIRI);
+  settingSet.insert(CSettings::SETTING_INPUT_APPLESIRITIMEOUT);
+  settingSet.insert(CSettings::SETTING_INPUT_APPLESIRITIMEOUTENABLED);
+  GetSettingsManager()->RegisterCallback(&CTVOSInputSettings::GetInstance(), settingSet);
 #endif
 
   settingSet.clear();

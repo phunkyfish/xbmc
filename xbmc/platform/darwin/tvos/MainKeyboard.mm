@@ -25,7 +25,7 @@
 #import "platform/darwin/tvos/MainController.h"
 #import "platform/darwin/tvos/MainKeyboardView.h"
 
-#import "AutoPool.h"
+#import "platform/darwin/AutoPool.h"
 
 KeyboardView *g_pTvosKeyboard = nil;
 

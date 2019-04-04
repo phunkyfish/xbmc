@@ -24,10 +24,12 @@
 
 #import "system.h"
 
-#define BOOL XBMC_BOOL
 #import "Application.h"
 
-#import "cores/AudioEngine/AEFactory.h"
+#include "ServiceBroker.h"
+#include "cores/AudioEngine/Interfaces/AE.h"
+
+#include "input/CustomControllerTranslator.h"
 #import "guilib/GUIWindowManager.h"
 #import "input/Key.h"
 #import "input/ButtonTranslator.h"
@@ -43,10 +45,11 @@
 #import "platform/darwin/tvos/TVOSTopShelf.h"
 #import "platform/darwin/ios-common/AnnounceReceiver.h"
 #include "platform/xbmc.h"
-#include "platform/XbmcContext.h"
+//#include "platform/XbmcContext.h"
 #include "settings/AdvancedSettings.h"
-#include "log.h"
-#import "windowing/WindowingFactory.h"
+#include "utils/log.h"
+//#import "windowing/WindowingFactory.h"
+#include "windowing/osx/WinEventsTVOS.h"
 
 #import <MediaPlayer/MPMediaItem.h>
 #import <MediaPlayer/MPNowPlayingInfoCenter.h>
@@ -119,7 +122,7 @@ MainController *g_xbmcController;
   std::string actionName;
   
   // Translate using custom controller translator.
-  if (CButtonTranslator::GetInstance().TranslateCustomControllerString(g_windowManager.GetActiveWindowID(), "SiriRemote", buttonId, actionID, actionName))
+  if(CCustomControllerTranslator::TranslateCustomControllerString(CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindowOrDialog(), "SiriRemote", buttonId, actionID, actionName))
   {
     // break screensaver
     g_application.ResetSystemIdleTimer();
@@ -128,7 +131,7 @@ MainController *g_xbmcController;
     // in case we wokeup the screensaver or screen - eat that action...
     if (g_application.WakeUpScreenSaverAndDPMS())
       return;
-    CInputManager::GetInstance().QueueAction(CAction(actionID, 1.0f, 0.0f, actionName), true);
+    CServiceBroker::GetInputManager().QueueAction(CAction(actionID, 1.0f, 0.0f, actionName));
   }
   else
   {
