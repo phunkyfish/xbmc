@@ -19,6 +19,7 @@
  */
  
 #import <UIKit/UIKit.h>
+#import <AVFoundation/AVFoundation.h>
 #import <objc/runtime.h>
 
 #import "platform/darwin/tvos/MainApplication.h"

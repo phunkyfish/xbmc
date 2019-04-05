@@ -29,16 +29,16 @@
 #endif // defined(TARGET_DARWIN_OSX)
 #if defined(TARGET_DARWIN)
 #include "platform/darwin/DarwinUtils.h"
-#endif
-#if defined(TARGET_DARWIN_IOS)
+#endif // defined(TARGET_DARWIN)
 #if defined(TARGET_DARWIN_TVOS)
 #include "platform/darwin/tvos/TVOSSettingsHandler.h"
-#endif
+#endif // defined(TARGET_DARWIN_TVOS)
+#if defined(TARGET_DARWIN_IOS) || defined(TARGET_DARWIN_TVOS)
 #include "SettingAddon.h"
-#endif
+#endif // defined(TARGET_DARWIN_IOS) || defined(TARGET_DARWIN_TVOS)
 #if defined(TARGET_RASPBERRY_PI)
 #include "platform/linux/RBP.h"
-#endif
+#endif // defined(TARGET_RASPBERRY_PI)
 #if defined(HAS_LIBAMCODEC)
 #include "utils/AMLUtils.h"
 #endif // defined(HAS_LIBAMCODEC)

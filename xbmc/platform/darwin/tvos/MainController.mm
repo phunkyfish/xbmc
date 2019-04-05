@@ -26,6 +26,7 @@
 
 #import "Application.h"
 
+#include "AppParamParser.h"
 #include "ServiceBroker.h"
 #include "cores/AudioEngine/Interfaces/AE.h"
 
@@ -125,7 +126,8 @@ MainController *g_xbmcController;
   std::string actionName;
   
   // Translate using custom controller translator.
-  if(CCustomControllerTranslator::TranslateCustomControllerString(CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindowOrDialog(), "SiriRemote", buttonId, actionID, actionName))
+  CCustomControllerTranslator customControllerTranslator;
+  if(customControllerTranslator.TranslateCustomControllerString(CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindowOrDialog(), "SiriRemote", buttonId, actionID, actionName))
   {
     // break screensaver
     g_application.ResetSystemIdleTimer();
@@ -1770,8 +1772,9 @@ int KODI_Run(bool renderGUI)
         //CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->Initialize();
         // TODO
     }
-  
-  if (!g_application.Create())
+
+  CAppParamParser appParamParser; // TODO: proper params
+  if (!g_application.Create(appParamParser))
   {
     ELOG(@"ERROR: Unable to create application. Exiting");
     return status;
@@ -1792,8 +1795,7 @@ int KODI_Run(bool renderGUI)
   
   try
   {
-    CFileItemList playlist;
-    status = g_application.Run(playlist);
+    status = g_application.Run(appParamParser);
   }
   catch(...)
   {
@@ -1828,7 +1830,7 @@ int KODI_Run(bool renderGUI)
   try
   {
     // set up some Kodi specific relationships
-    XBMC::Context run_context;
+//    XBMC::Context run_context; // TODO
     m_appAlive = TRUE;
     // start up with gui enabled
     status = KODI_Run(true);
