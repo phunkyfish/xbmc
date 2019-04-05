@@ -1443,7 +1443,8 @@ MainController *g_xbmcController;
   winSystem->OnAppFocusChange(false);
 
   // Apple says to disable ZeroConfig when moving to background
-  CNetworkServices::GetInstance().StopZeroconf();
+  // TODO
+  //CNetworkServices::GetInstance().StopZeroconf();
 
   if (m_isPlayingBeforeInactive)
   {
@@ -1463,8 +1464,11 @@ MainController *g_xbmcController;
   // AudioOutputUnitStop to complete and AVAudioSession to be set inactive.
   // Note that to user, we moved into background to user but we
   // are really waiting here for AE to suspend.
+  //TODO
+    /*
   while (!CAEFactory::IsSuspended() && !timer.IsTimePast())
     usleep(250*1000);
+     */
 }
 
 - (void)enterForegroundDelayed:(id)arg
@@ -1673,7 +1677,8 @@ MainController *g_xbmcController;
             refreshRate = self.getDisplayRate;
           }
         }
-        g_graphicsContext.SetFPS(refreshRate);
+        // TODO
+        //g_graphicsContext.SetFPS(refreshRate);
         std::string dynamicRangeString = "Unknown";
         switch(dynamicRange)
         {
@@ -1751,18 +1756,20 @@ int KODI_Run(bool renderGUI)
   //this can't be set from CAdvancedSettings::Initialize()
   //because it will overwrite the loglevel set with the --debug flag
 #ifdef _DEBUG
-  g_advancedSettings.m_logLevel     = LOG_LEVEL_DEBUG;
-  g_advancedSettings.m_logLevelHint = LOG_LEVEL_DEBUG;
+  CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevel = LOG_LEVEL_DEBUG;
+  CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevelHint = LOG_LEVEL_DEBUG;
 #else
-  g_advancedSettings.m_logLevel     = LOG_LEVEL_NORMAL;
-  g_advancedSettings.m_logLevelHint = LOG_LEVEL_NORMAL;
+  CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevel = LOG_LEVEL_NORMAL;
+  CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevelHint = LOG_LEVEL_NORMAL;
 #endif
-  CLog::SetLogLevel(g_advancedSettings.m_logLevel);
+  CLog::SetLogLevel(CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_logLevel);
   
   // not a failure if returns false, just means someone
   // did the init before us.
-  if (!g_advancedSettings.Initialized())
-    g_advancedSettings.Initialize();
+    if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->Initialized()){
+        //CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->Initialize();
+        // TODO
+    }
   
   if (!g_application.Create())
   {

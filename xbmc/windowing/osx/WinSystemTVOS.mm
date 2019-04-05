@@ -80,6 +80,41 @@ size_t CWinSystemTVOS::GetQueueSize()
     dynamic_cast<CWinEventsTVOS&>(*m_winEvents).GetQueueSize();
 }
 
+void CWinSystemTVOS::AnnounceOnLostDevice()
+{
+    CSingleLock lock(m_resourceSection);
+    // tell any shared resources
+    CLog::Log(LOGDEBUG, "CWinSystemTVOS::AnnounceOnLostDevice");
+    for (std::vector<IDispResource *>::iterator i = m_resources.begin(); i != m_resources.end(); i++)
+        (*i)->OnLostDisplay();
+}
+
+void CWinSystemTVOS::AnnounceOnResetDevice()
+{
+    CSingleLock lock(m_resourceSection);
+    // tell any shared resources
+    CLog::Log(LOGDEBUG, "CWinSystemTVOS::AnnounceOnResetDevice");
+    for (std::vector<IDispResource *>::iterator i = m_resources.begin(); i != m_resources.end(); i++)
+        (*i)->OnResetDisplay();
+}
+
+void CWinSystemTVOS::StartLostDeviceTimer()
+{
+    /* TODO
+    if (m_lostDeviceTimer.IsRunning())
+        m_lostDeviceTimer.Restart();
+    else
+        m_lostDeviceTimer.Start(LOST_DEVICE_TIMEOUT_MS, false);
+     */
+}
+
+void CWinSystemTVOS::StopLostDeviceTimer()
+{
+    // TODO
+    //m_lostDeviceTimer.Stop();
+}
+
+
 int CWinSystemTVOS::GetDisplayIndexFromSettings()
 {
   std::string currentScreen = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_VIDEOSCREEN_MONITOR);

@@ -27,6 +27,10 @@ public:
 
   void MessagePush(XBMC_Event *newEvent);
   size_t GetQueueSize();
+    void AnnounceOnLostDevice();
+    void AnnounceOnResetDevice();
+    void StartLostDeviceTimer();
+    void StopLostDeviceTimer();
   int GetDisplayIndexFromSettings();
   // Implementation of CWinSystemBase
   CRenderSystemBase *GetRenderSystem() override { return this; }
