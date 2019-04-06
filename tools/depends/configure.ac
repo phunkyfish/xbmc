@@ -338,7 +338,7 @@ case $host in
           sdk_name=$target_platform$use_sdk
           platform_min_version="$target_platform-version-min=11.0"
 
-          // using a version earlier than 11.0 won't work on Xcode 9
+          # using a version earlier than 11.0 won't work on Xcode 9
           case $use_sdk in
             11.*);;
             12.*);;
