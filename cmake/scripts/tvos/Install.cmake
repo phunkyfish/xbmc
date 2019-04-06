@@ -1,26 +1,7 @@
-# IOS packaging
+# TVOS packaging
 
-set(BUNDLE_RESOURCES ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1100-Landscape-2436h@3x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1100-Portrait-2436h@3x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1200-Landscape-1792h@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1200-Portrait-2224h@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1200-Landscape-2224h@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1200-Portrait-2388h@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1200-Landscape-2388h@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1200-Landscape-2688h@3x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1200-Portrait-1792h@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-1200-Portrait-2688h@3x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-568h@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-700-568h@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-700-Landscape@2x~ipad.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-700-Portrait@2x~ipad.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-700@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-800-667h@2x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-800-Landscape-736h@3x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-800-Portrait-736h@3x.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-Landscape@2x~ipad.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage-Portrait@2x~ipad.png
-                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/LaunchImage@2x.png
+set(BUNDLE_RESOURCES ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/Assets.xcassets/LaunchImage.launchimage/Splash@2x.png
+                     ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/Assets.xcassets/LaunchImage.launchimage/Splash.png
                      ${CMAKE_SOURCE_DIR}/tools/darwin/packaging/media/tvos/rounded/AppIcon29x29.png
                      ${CMAKE_SOURCE_DIR}/tools/darwin/packaging/media/tvos/rounded/AppIcon29x29@2x.png
                      ${CMAKE_SOURCE_DIR}/tools/darwin/packaging/media/tvos/rounded/AppIcon40x40.png
@@ -45,14 +26,14 @@ target_sources(${APP_NAME_LC} PRIVATE ${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/t
 set_source_files_properties(${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/English.lproj/InfoPlist.strings PROPERTIES MACOSX_PACKAGE_LOCATION "./English.lproj")
 
 # Options for code signing propagated as env vars to Codesign.command via Xcode
-set(IOS_CODE_SIGN_IDENTITY "" CACHE STRING "Code Sign Identity")
-if(IOS_CODE_SIGN_IDENTITY)
+set(TVOS_CODE_SIGN_IDENTITY "" CACHE STRING "Code Sign Identity")
+if(TVOS_CODE_SIGN_IDENTITY)
   set_target_properties(${APP_NAME_LC} PROPERTIES XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED TRUE
-                                                  XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${IOS_CODE_SIGN_IDENTITY})
+                                                  XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${TVOS_CODE_SIGN_IDENTITY})
 endif()
 
 add_custom_command(TARGET ${APP_NAME_LC} POST_BUILD
-    # TODO: Remove in sync with CopyRootFiles-ios expecting the ".bin" file
+    # TODO: Remove in sync with CopyRootFiles-tvos expecting the ".bin" file
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${APP_NAME_LC}>
                                      $<TARGET_FILE_DIR:${APP_NAME_LC}>/${APP_NAME}.bin
 
