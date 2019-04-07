@@ -35,7 +35,7 @@
 #import <QuartzCore/CADisplayLink.h>
 
 #import "platform/darwin/ios/XBMCController.h"
-#import "platform/darwin/ios/IOSScreenManager.h"
+//#import "platform/darwin/ios/IOSScreenManager.h"
 #include "platform/darwin/DarwinUtils.h"
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
@@ -184,7 +184,8 @@ bool CWinSystemTVOS::CreateNewWindow(const std::string& name, bool fullScreen, R
   m_eglext += " ";
 
   CLog::Log(LOGDEBUG, "EGL_EXTENSIONS:%s", m_eglext.c_str());
-
+    
+ /*
   // register platform dependent objects
   CDVDFactoryCodec::ClearHWAccels();
   VTB::CDecoder::Register();
@@ -194,6 +195,7 @@ bool CWinSystemTVOS::CreateNewWindow(const std::string& name, bool fullScreen, R
   VIDEOPLAYER::CProcessInfoIOS::Register();
   RETRO::CRPProcessInfoIOS::Register();
   RETRO::CRPProcessInfoIOS::RegisterRendererFactory(new RETRO::CRendererFactoryOpenGLES);
+  */
 
   return true;
 }
@@ -433,15 +435,18 @@ void CWinSystemTVOS::OnAppFocusChange(bool focus)
 //--------------------------------------------------------------
 - (void) runDisplayLink
 {
+  /*
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   if (_videoSyncImpl != nil)
   {
     _videoSyncImpl->IosVblankHandler();
   }
   [pool release];
+   */
 }
 @end
 
+/*
 bool CWinSystemTVOS::InitDisplayLink(CVideoSyncIos *syncImpl)
 {
   //init with the appropriate display link for the
@@ -474,6 +479,7 @@ void CWinSystemTVOS::DeinitDisplayLink(void)
     [m_pDisplayLink->callbackClass SetVideoSyncImpl:nil];
   }
 }
+ */
 //------------DisplayLink stuff end
 //--------------------------------------------------------------
 

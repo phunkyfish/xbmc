@@ -63,7 +63,7 @@ public:
 
   //virtual std::unique_ptr<CVideoSync> GetVideoSync(void *clock) override;
 
-  bool InitDisplayLink(CVideoSyncIos *syncImpl);
+  //bool InitDisplayLink(CVideoSyncIos *syncImpl);
   void DeinitDisplayLink(void);
   void OnAppFocusChange(bool focus);
   bool IsBackgrounded() const { return m_bIsBackgrounded; }

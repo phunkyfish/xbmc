@@ -5,7 +5,8 @@ set(SOURCES
 			MainKeyboard.mm
 			MainKeyboardView.mm
 			TVOSSettingsHandler.mm
-			TVOSTopShelf.mm)
+			TVOSTopShelf.mm
+			tvosShared.m)
 
 set(HEADERS
 			MainApplication.h
