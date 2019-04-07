@@ -310,7 +310,7 @@ void CExternalPlayer::Process()
   ret = ExecuteAppW32(strFName.c_str(),strFArgs.c_str());
 #elif defined(TARGET_ANDROID)
   ret = ExecuteAppAndroid(m_filename.c_str(), mainFile.c_str());
-#elif (defined(TARGET_POSIX) && !defined(TARGET_DARWIN_IOS)) || defined(TARGET_DARWIN_OSX)
+#elif (defined(TARGET_POSIX) && !defined(TARGET_DARWIN_IOS) && !defined(TARGET_DARWIN_TVOS)) || defined(TARGET_DARWIN_OSX)
   ret = ExecuteAppLinux(strFArgs.c_str());
 #endif
   int64_t elapsedMillis = XbmcThreads::SystemClockMillis() - m_playbackStartTime;

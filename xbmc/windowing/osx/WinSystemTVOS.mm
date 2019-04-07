@@ -141,9 +141,13 @@ CWinSystemTVOS::CWinSystemTVOS() : CWinSystemBase()
   m_bIsBackgrounded = false;
   m_pDisplayLink = new CADisplayLinkWrapper;
   m_pDisplayLink->callbackClass = [[IOSDisplayLinkCallback alloc] init];
-  //m_winEvents.reset(new CWinEventsTVOS());
+  
+  // TODO
+  /*
+  m_winEvents.reset(new CWinEventsTVOS());
 
   CAESinkDARWINIOS::Register();
+   */
 }
 
 CWinSystemTVOS::~CWinSystemTVOS()
@@ -393,7 +397,7 @@ void CWinSystemTVOS::FillInVideoModes(int screenIdx)
 
 
 
-/*
+
 bool CWinSystemTVOS::IsExtSupported(const char* extension) const
 {
   if(strncmp(extension, "EGL_", 4) != 0)
@@ -407,7 +411,7 @@ bool CWinSystemTVOS::IsExtSupported(const char* extension) const
 
   return m_eglext.find(name) != std::string::npos;
 }
- */
+
 
 
 bool CWinSystemTVOS::BeginRender()
