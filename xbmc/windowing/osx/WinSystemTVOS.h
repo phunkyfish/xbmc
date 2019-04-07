@@ -39,7 +39,7 @@ public:
   bool CreateNewWindow(const std::string& name, bool fullScreen, RESOLUTION_INFO& res) override;
   bool DestroyWindow() override;
   bool ResizeWindow(int newWidth, int newHeight, int newLeft, int newTop) override;
-  //bool SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays) override;
+  bool SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays) override;
   void UpdateResolutions() override;
   bool CanDoWindowed() override { return false; }
 
@@ -87,9 +87,9 @@ protected:
   bool         m_bIsBackgrounded;
 
 private:
-  //bool GetScreenResolution(int* w, int* h, double* fps, int screenIdx);
+  bool GetScreenResolution(int* w, int* h, double* fps, int screenIdx);
   void FillInVideoModes(int screenIdx);
-  //bool SwitchToVideoMode(int width, int height, double refreshrate);
+  bool SwitchToVideoMode(int width, int height, double refreshrate);
   CADisplayLinkWrapper *m_pDisplayLink;
   int m_internalTouchscreenResolutionWidth = -1;
   int m_internalTouchscreenResolutionHeight = -1;

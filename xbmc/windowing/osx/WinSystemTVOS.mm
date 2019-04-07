@@ -62,13 +62,13 @@ struct CADisplayLinkWrapper
   IOSDisplayLinkCallback *callbackClass;
 };
 
-/*
+
 std::unique_ptr<CWinSystemBase> CWinSystemBase::CreateWinSystem()
 {
   std::unique_ptr<CWinSystemBase> winSystem(new CWinSystemTVOS());
   return winSystem;
 }
- */
+ 
 
 void CWinSystemTVOS::MessagePush(XBMC_Event *newEvent)
 {
@@ -166,9 +166,11 @@ bool CWinSystemTVOS::CreateNewWindow(const std::string& name, bool fullScreen, R
 {
   //NSLog(@"%s", __PRETTY_FUNCTION__);
 
+  
   if(!SetFullScreen(fullScreen, res, false))
     return false;
-
+  
+  
   [g_xbmcController setFramebuffer];
 
   m_bWindowCreated = true;
@@ -220,7 +222,7 @@ bool CWinSystemTVOS::ResizeWindow(int newWidth, int newHeight, int newLeft, int 
   return true;
 }
 
-/*
+
 bool CWinSystemTVOS::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool blankOtherDisplays)
 {
   //NSLog(@"%s", __PRETTY_FUNCTION__);
@@ -235,12 +237,17 @@ bool CWinSystemTVOS::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool b
 
   return true;
 }
- */
 
-/*
+
+
 UIScreenMode *getModeForResolution(int width, int height, unsigned int screenIdx)
 {
   UIScreen *aScreen = [[UIScreen screens]objectAtIndex:screenIdx];
+  
+  // availableModes not avaible on tvOS
+  UIScreenMode *mode = [aScreen currentMode];
+  return mode;
+  /*
   for ( UIScreenMode *mode in [aScreen availableModes] )
   {
     //for main screen also find modes where width and height are
@@ -255,10 +262,11 @@ UIScreenMode *getModeForResolution(int width, int height, unsigned int screenIdx
   }
   CLog::Log(LOGERROR,"No matching mode found!");
   return NULL;
+   */
 }
- */
 
-/*
+
+
 bool CWinSystemTVOS::SwitchToVideoMode(int width, int height, double refreshrate)
 {
   bool ret = false;
@@ -273,9 +281,9 @@ bool CWinSystemTVOS::SwitchToVideoMode(int width, int height, double refreshrate
   }
   return ret;
 }
- */
 
-/*
+
+
 bool CWinSystemTVOS::GetScreenResolution(int* w, int* h, double* fps, int screenIdx)
 {
   UIScreen *screen = [[UIScreen screens] objectAtIndex:screenIdx];
@@ -288,7 +296,9 @@ bool CWinSystemTVOS::GetScreenResolution(int* w, int* h, double* fps, int screen
   //then use the preferred mode
   if(*h == 0 || *w ==0)
   {
-    UIScreenMode *firstMode = [screen preferredMode];
+    // preferredMode not avaible on tvOS
+    UIScreenMode *firstMode = [screen currentMode];
+    //UIScreenMode *firstMode = [screen preferredMode];
     *w = firstMode.size.width;
     *h = firstMode.size.height;
   }
@@ -317,9 +327,9 @@ bool CWinSystemTVOS::GetScreenResolution(int* w, int* h, double* fps, int screen
   CLog::Log(LOGDEBUG,"Current resolution Screen: %i with %i x %i",screenIdx, *w, *h);
   return true;
 }
- */
 
-/*
+
+
 void CWinSystemTVOS::UpdateResolutions()
 {
   // Add display resolution
@@ -339,9 +349,9 @@ void CWinSystemTVOS::UpdateResolutions()
   //and push to the resolution info vector
   FillInVideoModes(screenIdx);
 }
-*/
 
-/*
+
+
 void CWinSystemTVOS::FillInVideoModes(int screenIdx)
 {
   // Add full screen settings for additional monitors
@@ -354,6 +364,8 @@ void CWinSystemTVOS::FillInVideoModes(int screenIdx)
   double refreshrate = 0.0;
   //screen 0 is mainscreen - 1 has to be the external one...
   UIScreen *aScreen = [[UIScreen screens]objectAtIndex:screenIdx];
+  
+  /*
   //found external screen
   for ( UIScreenMode *mode in [aScreen availableModes] )
   {
@@ -366,8 +378,19 @@ void CWinSystemTVOS::FillInVideoModes(int screenIdx)
     CServiceBroker::GetWinSystem()->GetGfxContext().ResetOverscan(res);
     CDisplaySettings::GetInstance().AddResolutionInfo(res);
   }
+   */
+  UIScreenMode *mode = [aScreen currentMode];
+  w = mode.size.width;
+  h = mode.size.height;
+  
+  UpdateDesktopResolution(res, screenIdx == 0 ? CONST_TOUCHSCREEN : CONST_EXTERNAL, w, h, refreshrate, 0);
+  CLog::Log(LOGNOTICE, "Found possible resolution for display %d with %d x %d\n", screenIdx, w, h);
+  
+  CServiceBroker::GetWinSystem()->GetGfxContext().ResetOverscan(res);
+  CDisplaySettings::GetInstance().AddResolutionInfo(res);
+  
 }
- */
+
 
 
 /*
