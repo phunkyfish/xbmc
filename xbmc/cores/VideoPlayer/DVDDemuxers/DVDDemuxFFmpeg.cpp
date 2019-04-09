@@ -1362,9 +1362,7 @@ void CDVDDemuxFFmpeg::CreateStreams(unsigned int program)
       // add streams from selected program
       for (unsigned int i = 0; i < m_pFormatContext->programs[m_program]->nb_stream_indexes; i++)
       {
-        int streamIdx = m_pFormatContext->programs[m_program]->stream_index[i];
-        m_pFormatContext->streams[streamIdx]->discard = AVDISCARD_NONE;
-        AddStream(streamIdx);
+        AddStream(m_pFormatContext->programs[m_program]->stream_index[i]);
       }
 
       // discard all unneeded streams
