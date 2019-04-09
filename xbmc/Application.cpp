@@ -420,7 +420,7 @@ bool CApplication::Create(const CAppParamParser &params)
   CopyUserDataIfNeeded("special://masterprofile/", "Lircmap.xml");
 
   //! @todo - move to CPlatformXXX
-  #ifdef TARGET_DARWIN_IOS
+  #if defined(TARGET_DARWIN_IOS) || defined(TARGET_DARWIN_TVOS)
     CopyUserDataIfNeeded("special://masterprofile/", "iOS/sources.xml", "sources.xml");
   #endif
 
@@ -1316,6 +1316,7 @@ bool CApplication::LoadSkin(const std::string& skinID)
   CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(this);
   CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(&CServiceBroker::GetPlaylistPlayer());
   CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(&g_fontManager);
+  CServiceBroker::GetGUI()->GetWindowManager().AddMsgTarget(&CServiceBroker::GetGUI()->GetStereoscopicsManager());
   CServiceBroker::GetGUI()->GetWindowManager().SetCallback(*this);
   //@todo should be done by GUIComponents
   CServiceBroker::GetGUI()->GetWindowManager().Initialize();
