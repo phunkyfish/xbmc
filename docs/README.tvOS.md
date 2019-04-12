@@ -87,7 +87,7 @@ Configure build for 64bit:
 ```
 cd $HOME/kodi/tools/depends
 ./bootstrap
-./configure --host=arm-apple-darwin --with-cpu=arm64 --with-platform=tvos
+./configure --host=arm-apple-darwin --with-platform=tvos
 ```
 
 Build tools and dependencies:
@@ -101,7 +101,7 @@ make -j$(getconf _NPROCESSORS_ONLN)
 
 **NOTE:** **Advanced developers** may want to specify an tvOS SDK version (if multiple versions are installed) in the configure line(s) shown above. The example below would use the tvOS SDK 11.0:
 ```
-./configure --host=arm-apple-darwin --with-cpu=arm64 --with-sdk=11.0
+./configure --host=arm-apple-darwin --with-platform=tvos --with-sdk=11.0
 ```
 
 **[back to top](#table-of-contents)** | **[back to section top](#4-configure-and-build-tools-and-dependencies)**
@@ -230,8 +230,8 @@ Whether you have paid or free developer account you can deploy Kodi via Xcode to
 The Apple TV 4K cannot be connected to mac via a cable so the connection must be wireless to XCode to add the application.
 
   1. Make sure your Mac and your Apple TV are on the same network.
-  2. Choose Window > Devices and Simulators, then in the window that appears, click Devices.
-  3. On your Apple TV, open the Settings app and choose Remotes and Devices > Remote App and Devices.
+  2. Choose `Window->Devices and Simulators`, then in the window that appears, click Devices.
+  3. On your Apple TV, open the Settings app and choose `Remotes and Devices->Remote App and Devices`.
   4. The Apple TV searches for possible devices including the Mac. (If you have any Firewall or Internet security, disable/turn off to allow searching.)
   5. On your Mac, select the Apple TV in the Devices pane. The pane for the Apple TV is displayed and shows the current status of the connection request.
   6. Enter the verification code displayed on your AppleTV into the Device window pane for the device and click Connect.
@@ -250,7 +250,7 @@ Note that using a free developer account the signing will need to be reapplied e
     * Hit the + sign to add an Apple ID accoumt and Login.
   2. Next select the kodi build target
   3. Under the `General` tab, enter a unique bundle identifer and check the box to `Automatically Manage Signing`.
-    * Note: you may also need to enable `Keychain Sharing` on the `Capabilities` for your bundle identifier.
+  4. Select your team under `Automatically Manage Signing`.
 
 #### An important note on Code Signing
 It's also important that you select the signing on all 4 spots in the project settings. After the last buildstep, our support script will do a full sign of all binaries and bundle them with the given identity, including all the `*.viz`, `*.pvr`, `*.so`, etc. files Xcode doesn't know anything about. This should allow you to deploy Kodi to all non-jailbroken devices the same way you deploy normal apps to.
@@ -259,7 +259,12 @@ In that case Kodi will be sandboxed like any other app. All Kodi files are then 
 ### Installing on AppleTV
 There are two options for deplying to your AppleTV 4/4K. The first is just by using Run in XCode for a debugging sessions.
 
-The alternative is deploy the the output of the `deb` target. To do this:
+Note that if you get a App Verification Failed error message when trying to to use `Run` you can delete two files in the created Kodi.app.
+
+ * `rm -rf $HOME/kodi-build/build/Debug-appletvos/Kodi.app/_CodeSignature`
+ * `rm -f $HOME/kodi-build/build/Debug-appletvos/Kodi.app/embedded.*provision`
+
+The alternative is to deploy the output of the `deb` target. To do this:
 
   1. Choose Window > Devices and Simulators, then in the window that appears, click Devices.
   2. On your Mac, select the Apple TV in the Devices pane.
