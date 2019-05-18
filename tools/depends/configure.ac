@@ -321,14 +321,8 @@ case $host in
 
         # setup which sdk to use
         if test "$use_platform" = "tvos"; then
-          # setup which cpu to use
-          if test "x$use_cpu" = "xauto"; then
-            use_cpu=arm64
-          fi
-
+          use_cpu=arm64
           target_platform=appletvos
-          platform_cflags+=" -fembed-bitcode"
-          platform_cxxflags+=" -fembed-bitcode"
           platform_min_version="$target_platform-version-min=11.0"
         else
           # setup which cpu to use
@@ -427,6 +421,8 @@ case $use_platform in
      platform_ldflags="-lpthread"
      ;;
   tvos)
+     platform_cflags+=" -fembed-bitcode"
+     platform_cxxflags+=" -fembed-bitcode"
     if test "$platform_os" != "darwin_embedded"; then
       AC_MSG_ERROR([$use_platform is only supported on the darwin_embedded platform])
     fi
