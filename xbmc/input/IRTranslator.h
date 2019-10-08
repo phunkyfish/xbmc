@@ -33,6 +33,7 @@ public:
   unsigned int TranslateButton(const std::string &szDevice, const std::string &szButton);
 
   static uint32_t TranslateButton(const TiXmlElement* pButton);
+  static uint32_t TranslateUniversalRemoteButton(const TiXmlElement* pButton);
   static uint32_t TranslateString(std::string strButton);
   static uint32_t TranslateUniversalRemoteString(const std::string &szButton);
 

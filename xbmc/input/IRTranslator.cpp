@@ -157,6 +157,32 @@ uint32_t CIRTranslator::TranslateButton(const TiXmlElement* pButton)
   return button_id;
 }
 
+uint32_t CIRTranslator::TranslateUniversalRemoteButton(const TiXmlElement* pButton)
+{
+  uint32_t button_id = TranslateUniversalRemoteString(pButton->Value());
+
+  // Process the longpress modifier
+  std::string strMod;
+  if (pButton->QueryValueAttribute("mod", &strMod) == TIXML_SUCCESS)
+  {
+    StringUtils::ToLower(strMod);
+
+    std::vector<std::string> modArray = StringUtils::Split(strMod, ",");
+    for (auto substr : modArray)
+    {
+      StringUtils::Trim(substr);
+
+      if (substr == "longpress")
+        button_id |= CKey::MODIFIER_LONG;
+      else
+        CLog::Log(LOGERROR, "Universal Remote Translator: Unknown key modifier %s in %s",
+                  substr.c_str(), strMod.c_str());
+    }
+  }
+
+  return button_id;
+}
+
 unsigned int CIRTranslator::TranslateButton(const std::string &szDevice, const std::string &szButton)
 {
   // Find the device
