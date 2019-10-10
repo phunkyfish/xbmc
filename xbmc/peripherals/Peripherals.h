@@ -53,6 +53,8 @@ namespace PERIPHERALS
                         public ANNOUNCEMENT::IAnnouncer
   {
   public:
+    static const unsigned int HOLD_THRESHOLD_MS = 250;
+  
     explicit CPeripherals(CInputManager &inputManager,
                           KODI::GAME::CControllerManager &controllerProfiles);
 
