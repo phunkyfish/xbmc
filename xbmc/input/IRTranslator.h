@@ -40,6 +40,7 @@ public:
 private:
   bool LoadIRMap(const std::string &irMapPath);
   void MapRemote(TiXmlNode *pRemote, const std::string &szDevice);
+  static uint32_t ApplyModifiersToButton(const TiXmlElement* pButton, uint32_t iButtonCode);
 
   using IRButtonMap = std::map<std::string, std::string>;
 
