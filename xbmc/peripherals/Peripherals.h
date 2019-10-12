@@ -53,8 +53,6 @@ namespace PERIPHERALS
                         public ANNOUNCEMENT::IAnnouncer
   {
   public:
-    static const unsigned int HOLD_THRESHOLD_MS = 250;
-  
     explicit CPeripherals(CInputManager &inputManager,
                           KODI::GAME::CControllerManager &controllerProfiles);
 
@@ -325,6 +323,8 @@ namespace PERIPHERALS
     KODI::GAME::CControllerManager &GetControllerProfiles() { return m_controllerProfiles; }
 
   private:
+    static const unsigned int HOLD_THRESHOLD_MS = 250;
+
     bool LoadMappings();
     bool GetMappingForDevice(const CPeripheralBus &bus, PeripheralScanResult& result) const;
     static void GetSettingsFromMappingsFile(TiXmlElement *xmlNode, std::map<std::string, PeripheralDeviceSetting> &m_settings);

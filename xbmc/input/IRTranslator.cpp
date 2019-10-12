@@ -131,30 +131,6 @@ void CIRTranslator::Clear()
   m_irRemotesMap.clear();
 }
 
-uint32_t CIRTranslator::ApplyModifiersToButton(const TiXmlElement* pButton, uint32_t iButtonCode)
-{
-  // Process the longpress modifier
-  std::string strMod;
-  if (pButton->QueryValueAttribute("mod", &strMod) == TIXML_SUCCESS)
-  {
-    StringUtils::ToLower(strMod);
-
-    std::vector<std::string> modArray = StringUtils::Split(strMod, ",");
-    for (auto substr : modArray)
-    {
-      StringUtils::Trim(substr);
-
-      if (substr == "longpress")
-        iButtonCode |= CKey::MODIFIER_LONG;
-      else
-        CLog::Log(LOGERROR, "Remote Translator: Unknown key modifier %s in %s",
-                  substr.c_str(), strMod.c_str());
-    }
-  }
-
-  return iButtonCode;
-}
-
 uint32_t CIRTranslator::TranslateButton(const TiXmlElement* pButton)
 {
   return ApplyModifiersToButton(pButton, TranslateString(pButton->Value()));
@@ -276,4 +252,28 @@ uint32_t CIRTranslator::TranslateUniversalRemoteString(const std::string &szButt
     buttonCode = 0;
 
   return buttonCode;
+}
+
+uint32_t CIRTranslator::ApplyModifiersToButton(const TiXmlElement* pButton, uint32_t iButtonCode)
+{
+  // Process the longpress modifier
+  std::string strMod;
+  if (pButton->QueryValueAttribute("mod", &strMod) == TIXML_SUCCESS)
+  {
+    StringUtils::ToLower(strMod);
+
+    std::vector<std::string> modArray = StringUtils::Split(strMod, ",");
+    for (auto substr : modArray)
+    {
+      StringUtils::Trim(substr);
+
+      if (substr == "longpress")
+        iButtonCode |= CKey::MODIFIER_LONG;
+      else
+        CLog::Log(LOGERROR, "Remote Translator: Unknown key modifier %s in %s",
+                  substr.c_str(), strMod.c_str());
+    }
+  }
+
+  return iButtonCode;
 }
