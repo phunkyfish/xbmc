@@ -335,9 +335,9 @@ void CButtonTranslator::MapWindowActions(const TiXmlNode *pWindow, int windowID)
         if (type == "gamepad")
             buttonCode = CGamepadTranslator::TranslateString(pButton->Value());
         else if (type == "remote")
-            buttonCode = CIRTranslator::TranslateButton(pButton);
+          buttonCode = CIRTranslator::TranslateButton(pButton);
         else if (type == "universalremote")
-            buttonCode = CIRTranslator::TranslateUniversalRemoteButton(pButton);
+          buttonCode = CIRTranslator::TranslateUniversalRemoteButton(pButton);
         else if (type == "keyboard")
             buttonCode = CKeyboardTranslator::TranslateButton(pButton);
         else if (type == "mouse")

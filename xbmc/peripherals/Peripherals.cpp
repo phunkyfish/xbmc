@@ -760,7 +760,7 @@ bool CPeripherals::GetNextKeypress(float frameTime, CKey &key)
           key = CKey(buttonCode, holdTime, CKey::MODIFIER_LONG);
         else
           key = CKey(buttonCode, holdTime);
-        
+
         cecDevice->ResetButton();
         return true;
       }
