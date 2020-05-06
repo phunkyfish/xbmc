@@ -218,7 +218,7 @@ bool Interface_Filesystem::file_exists(void* kodiBase, const char *filename, boo
   return CFile::Exists(filename, useCache);
 }
 
-int Interface_Filesystem::stat_file(void* kodiBase, const char *filename, struct __stat64* buffer)
+bool Interface_Filesystem::stat_file(void* kodiBase, const char *filename, struct STAT_STRUCTURE* buffer)
 {
   CAddonDll* addon = static_cast<CAddonDll*>(kodiBase);
   if (addon == nullptr || filename == nullptr || buffer == nullptr)
@@ -230,7 +230,19 @@ int Interface_Filesystem::stat_file(void* kodiBase, const char *filename, struct
     return false;
   }
 
-  return CFile::Stat(filename, buffer);
+  struct __stat64 statBuffer;
+  if (CFile::Stat(filename, &statBuffer) != 0)
+    return false;
+
+  buffer->deviceId = statBuffer.st_dev;
+  buffer->size = statBuffer.st_size;
+  buffer->accessTime = statBuffer.st_atime;
+  buffer->modificationTime = statBuffer.st_mtime;
+  buffer->statusTime = statBuffer.st_ctime;
+  buffer->isDirectory = S_ISDIR(statBuffer.st_mode);
+  buffer->isSymLink = S_ISLNK(statBuffer.st_mode);
+
+  return true;
 }
 
 bool Interface_Filesystem::delete_file(void* kodiBase, const char *filename)
