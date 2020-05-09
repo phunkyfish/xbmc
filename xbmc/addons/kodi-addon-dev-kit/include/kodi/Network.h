@@ -44,7 +44,7 @@ namespace network
 //==============================================================================
 /// @defgroup cpp_kodi_network_HttpHeader class HttpHeader
 /// @ingroup cpp_kodi_vfs_Defs
-/// @brief
+/// @brief The class used to access HTTP header information
 ///
 //@{
 class HttpHeader
@@ -110,10 +110,10 @@ public:
   //--------------------------------------------------------------------------
 
   //==========================================================================
-  /// @brief
+  /// @brief Get the value associated with this parameter of these HTTP headers
   ///
-  /// @param[in] param
-  /// @return
+  /// @param[in] param The name of the parameter a value is required for.
+  /// @return The value found
   ///
   std::string GetValue(const std::string& param) const
   {
@@ -136,10 +136,10 @@ public:
   //--------------------------------------------------------------------------
 
   //==========================================================================
-  /// @brief
+  /// @brief Get the values associated with this parameter of these HTTP headers
   ///
-  /// @param[in] param
-  /// @return
+  /// @param[in] param The name of the parameter values are required for.
+  /// @return The values found
   ///
   std::vector<std::string> GetValues(const std::string& param) const
   {
@@ -167,9 +167,9 @@ public:
   //--------------------------------------------------------------------------
 
   //==========================================================================
-  /// @brief
+  /// @brief Get the full header string associated with these HTTP headers
   ///
-  /// @return
+  /// @return The header as a string
   ///
   std::string GetHeader() const
   {
@@ -178,22 +178,22 @@ public:
     if (!m_handle.handle)
       return "";
 
-    std::string protoLine;
+    std::string header;
     char* string = m_handle.get_header(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle);
     if (string != nullptr)
     {
-      protoLine = string;
+      header = string;
       CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
                                                    string);
     }
-    return protoLine;
+    return header;
   }
   //--------------------------------------------------------------------------
 
   //==========================================================================
-  /// @brief
+  /// @brief Get the mime type associated with these HTTP headers
   ///
-  /// @return
+  /// @return The mime type
   ///
   std::string GetMimeType() const
   {
@@ -216,9 +216,9 @@ public:
   //--------------------------------------------------------------------------
 
   //==========================================================================
-  /// @brief
+  /// @brief Get the charset associated with these HTTP headers
   ///
-  /// @return
+  /// @return The charset 
   ///
   std::string GetCharset() const
   {
@@ -240,9 +240,9 @@ public:
   //--------------------------------------------------------------------------
 
   //==========================================================================
-  /// @brief
+  /// @brief The protocol line associated with these HTTP headers
   ///
-  /// @return
+  /// @return The protocol line
   ///
   std::string GetProtoLine() const
   {
@@ -399,7 +399,6 @@ inline std::string GetHostname()
 /// #include <kodi/Network.h>
 /// ...
 /// kodi::network::HttpHeader header;
-/// std::string url = "";
 /// bool ret = kodi::network::GetHttpHeader(url, header);
 /// ...
 /// ~~~~~~~~~~~~~
@@ -418,8 +417,8 @@ inline bool GetHttpHeader(const std::string& url, HttpHeader& header)
 /// @brief Get file mime type.
 ///
 /// @param[in] url URL source of the data
-/// @param[out] content
-/// @param[in] useragent [opt]
+/// @param[out] mimeType the mime type of the URL
+/// @param[in] useragent to be used when retrieving the MimeType [opt]
 /// @return true if successfully done, otherwise false
 ///
 ///
@@ -427,27 +426,28 @@ inline bool GetHttpHeader(const std::string& url, HttpHeader& header)
 ///
 /// **Example:**
 /// ~~~~~~~~~~~~~{.cpp}
-/// #include <kodi/Network.h>
+/// #include <kodi/Filesystem.h>
 /// ...
-/// std::string hostname = kodi::network::GetHostname();
-/// fprintf(stderr, "My hostname is '%s'\n", hostname.c_str());
+/// std::string mimeType; 
+/// if (kodi::vfs::GetMimeType(url, mimeType))
+///   fprintf(stderr, "The mime type is '%s'\n", mimeType.c_str());
 /// ...
 /// ~~~~~~~~~~~~~
 ///
 inline bool GetMimeType(const std::string& url,
-                        std::string& content,
+                        std::string& mimeType,
                         const std::string& useragent = "")
 {
   using namespace ::kodi::addon;
 
-  char* cContent;
+  char* cMimeType;
   bool ret = CAddonBase::m_interface->toKodi->kodi_network->get_mime_type(
-      CAddonBase::m_interface->toKodi->kodiBase, url.c_str(), &cContent, useragent.c_str());
-  if (cContent != nullptr)
+      CAddonBase::m_interface->toKodi->kodiBase, url.c_str(), &cMimeType, useragent.c_str());
+  if (cMimeType != nullptr)
   {
-    content = cContent;
+    mimeType = cMimeType;
     CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
-                                                 cContent);
+                                                 cMimeType);
   }
   return ret;
 }
@@ -459,7 +459,7 @@ inline bool GetMimeType(const std::string& url,
 ///
 /// @param[in] url URL source of the data
 /// @param[out] content The returned type
-/// @param[in] useragent [opt]
+/// @param[in] useragent to be used when retrieving the MimeType [opt]
 /// @return true if successfully done, otherwise false
 ///
 ///
@@ -467,13 +467,11 @@ inline bool GetMimeType(const std::string& url,
 ///
 /// **Example:**
 /// ~~~~~~~~~~~~~{.cpp}
-/// #include <kodi/Network.h>
+/// #include <kodi/Filesystem.h>
 /// ...
-/// std::string url = "";
-/// std::string content;
-/// bool ret = kodi::network::GetCookies(url, content);
-/// fprintf(stderr, "Content type from URL '%s' is '%s' (return was %s)\n",
-///         url.c_str(), content.c_str(), ret ? "true" : "false");
+/// std::string content; 
+/// if (kodi::vfs::GetContentType(url, content))
+///   fprintf(stderr, "The content type is '%s'\n", content.c_str());
 /// ...
 /// ~~~~~~~~~~~~~
 ///
@@ -509,11 +507,11 @@ inline bool GetContentType(const std::string& url,
 ///
 /// **Example:**
 /// ~~~~~~~~~~~~~{.cpp}
-/// #include <kodi/Network.h>
+/// #include <kodi/Filesystem.h>
 /// ...
 /// std::string url = "";
 /// std::string cookies;
-/// bool ret = kodi::network::GetCookies(url, cookies);
+/// bool ret = kodi::vfs::GetCookies(url, cookies);
 /// fprintf(stderr, "Cookies from URL '%s' are '%s' (return was %s)\n",
 ///         url.c_str(), cookies.c_str(), ret ? "true" : "false");
 /// ...
