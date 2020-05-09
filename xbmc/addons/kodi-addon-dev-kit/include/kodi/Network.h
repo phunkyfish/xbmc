@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "AddonBase.h"
 #include "c-api/network.h"
 
 #ifdef __cplusplus
@@ -23,10 +24,280 @@
 ///
 //------------------------------------------------------------------------------
 
+//==============================================================================
+/// @defgroup cpp_kodi_network_Defs Definitions, structures and enumerators
+/// @ingroup cpp_kodi_network
+/// @brief **Network definition values**\n
+/// All to network associated data structures.
+///
+//------------------------------------------------------------------------------
+
 namespace kodi
 {
 namespace network
 {
+
+//¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+// "C++" related filesystem definitions
+//{{{
+
+//==============================================================================
+/// @defgroup cpp_kodi_network_HttpHeader class HttpHeader
+/// @ingroup cpp_kodi_vfs_Defs
+/// @brief
+///
+//@{
+class HttpHeader
+{
+public:
+  //==========================================================================
+  /// @brief Http header parser class constructor
+  ///
+  HttpHeader()
+  {
+    using namespace ::kodi::addon;
+
+    CAddonBase::m_interface->toKodi->kodi_network->http_header_create(
+        CAddonBase::m_interface->toKodi->kodiBase, &m_handle);
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief Destructor
+  ///
+  ~HttpHeader()
+  {
+    using namespace ::kodi::addon;
+
+    CAddonBase::m_interface->toKodi->kodi_network->http_header_free(
+        CAddonBase::m_interface->toKodi->kodiBase, &m_handle);
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  /// @param[in] data
+  ///
+  void Parse(const std::string& data)
+  {
+    using namespace ::kodi::addon;
+
+    if (!m_handle.handle)
+      return;
+
+    return m_handle.parse(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle, data.c_str());
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  /// @param[in] param
+  /// @param[in] value
+  /// @param[in] overwrite [opt]
+  ///
+  void AddParam(const std::string& param, const std::string& value, const bool overwrite = false)
+  {
+    using namespace ::kodi::addon;
+
+    if (!m_handle.handle)
+      return;
+
+    return m_handle.add_param(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle,
+                              param.c_str(), value.c_str(), overwrite);
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  /// @param[in] param
+  /// @return
+  ///
+  std::string GetValue(const std::string& param) const
+  {
+    using namespace ::kodi::addon;
+
+    if (!m_handle.handle)
+      return "";
+
+    std::string protoLine;
+    char* string = m_handle.get_value(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle,
+                                      param.c_str());
+    if (string != nullptr)
+    {
+      protoLine = string;
+      CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
+                                                   string);
+    }
+    return protoLine;
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  /// @param[in] param
+  /// @return
+  ///
+  std::vector<std::string> GetValues(const std::string& param) const
+  {
+    using namespace kodi::addon;
+
+    if (!m_handle.handle)
+      return std::vector<std::string>();
+
+    int numValues;
+    char** res(m_handle.get_values(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle,
+                                   param.c_str(), &numValues));
+    if (res)
+    {
+      std::vector<std::string> vecReturn;
+      for (int i = 0; i < numValues; ++i)
+      {
+        vecReturn.emplace_back(res[i]);
+      }
+      CAddonBase::m_interface->toKodi->free_string_array(CAddonBase::m_interface->toKodi->kodiBase,
+                                                         res, numValues);
+      return vecReturn;
+    }
+    return std::vector<std::string>();
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  std::string GetHeader() const
+  {
+    using namespace ::kodi::addon;
+
+    if (!m_handle.handle)
+      return "";
+
+    std::string protoLine;
+    char* string = m_handle.get_header(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle);
+    if (string != nullptr)
+    {
+      protoLine = string;
+      CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
+                                                   string);
+    }
+    return protoLine;
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  std::string GetMimeType() const
+  {
+    using namespace ::kodi::addon;
+
+    if (!m_handle.handle)
+      return "";
+
+    std::string protoLine;
+    char* string =
+        m_handle.get_mime_type(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle);
+    if (string != nullptr)
+    {
+      protoLine = string;
+      CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
+                                                   string);
+    }
+    return protoLine;
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  std::string GetCharset() const
+  {
+    using namespace ::kodi::addon;
+
+    if (!m_handle.handle)
+      return "";
+
+    std::string protoLine;
+    char* string = m_handle.get_charset(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle);
+    if (string != nullptr)
+    {
+      protoLine = string;
+      CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
+                                                   string);
+    }
+    return protoLine;
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  std::string GetProtoLine() const
+  {
+    using namespace ::kodi::addon;
+
+    if (!m_handle.handle)
+      return "";
+
+    std::string protoLine;
+    char* string =
+        m_handle.get_proto_line(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle);
+    if (string != nullptr)
+    {
+      protoLine = string;
+      CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
+                                                   string);
+    }
+    return protoLine;
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  /// @return
+  ///
+  bool IsHeaderDone() const
+  {
+    using namespace ::kodi::addon;
+
+    if (!m_handle.handle)
+      return false;
+
+    return m_handle.is_header_done(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle);
+  }
+  //--------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief
+  ///
+  void Clear()
+  {
+    using namespace ::kodi::addon;
+
+    if (!m_handle.handle)
+      return;
+
+    m_handle.clear(CAddonBase::m_interface->toKodi->kodiBase, m_handle.handle);
+  }
+  //--------------------------------------------------------------------------
+
+  KODI_HTTP_HEADER m_handle;
+};
+//@}
+//----------------------------------------------------------------------------
 
 //============================================================================
 /// @ingroup cpp_kodi_network
@@ -109,6 +380,159 @@ inline std::string GetHostname()
     CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase, string);
   }
   return ip;
+}
+//----------------------------------------------------------------------------
+
+//============================================================================
+/// @ingroup cpp_kodi_network
+/// @brief
+///
+/// @param[in] url URL source of the data
+/// @param[out] header The class @ref cpp_kodi_network_Defs_HttpHeader
+/// @return true if successfully done, otherwise false
+///
+///
+/// ------------------------------------------------------------------------
+///
+/// **Example:**
+/// ~~~~~~~~~~~~~{.cpp}
+/// #include <kodi/Network.h>
+/// ...
+/// kodi::network::HttpHeader header;
+/// std::string url = "";
+/// bool ret = kodi::network::GetHttpHeader(url, header);
+/// ...
+/// ~~~~~~~~~~~~~
+///
+inline bool GetHttpHeader(const std::string& url, HttpHeader& header)
+{
+  using namespace ::kodi::addon;
+
+  return CAddonBase::m_interface->toKodi->kodi_network->get_http_header(
+      CAddonBase::m_interface->toKodi->kodiBase, url.c_str(), &header.m_handle);
+}
+//----------------------------------------------------------------------------
+
+//============================================================================
+/// @ingroup cpp_kodi_network
+/// @brief Get file mime type.
+///
+/// @param[in] url URL source of the data
+/// @param[out] content
+/// @param[in] useragent [opt]
+/// @return true if successfully done, otherwise false
+///
+///
+/// ------------------------------------------------------------------------
+///
+/// **Example:**
+/// ~~~~~~~~~~~~~{.cpp}
+/// #include <kodi/Network.h>
+/// ...
+/// std::string hostname = kodi::network::GetHostname();
+/// fprintf(stderr, "My hostname is '%s'\n", hostname.c_str());
+/// ...
+/// ~~~~~~~~~~~~~
+///
+inline bool GetMimeType(const std::string& url,
+                        std::string& content,
+                        const std::string& useragent = "")
+{
+  using namespace ::kodi::addon;
+
+  char* cContent;
+  bool ret = CAddonBase::m_interface->toKodi->kodi_network->get_mime_type(
+      CAddonBase::m_interface->toKodi->kodiBase, url.c_str(), &cContent, useragent.c_str());
+  if (cContent != nullptr)
+  {
+    content = cContent;
+    CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
+                                                 cContent);
+  }
+  return ret;
+}
+//----------------------------------------------------------------------------
+
+//============================================================================
+/// @ingroup cpp_kodi_network
+/// @brief Get file content-type.
+///
+/// @param[in] url URL source of the data
+/// @param[out] content The returned type
+/// @param[in] useragent [opt]
+/// @return true if successfully done, otherwise false
+///
+///
+/// ------------------------------------------------------------------------
+///
+/// **Example:**
+/// ~~~~~~~~~~~~~{.cpp}
+/// #include <kodi/Network.h>
+/// ...
+/// std::string url = "";
+/// std::string content;
+/// bool ret = kodi::network::GetCookies(url, content);
+/// fprintf(stderr, "Content type from URL '%s' is '%s' (return was %s)\n",
+///         url.c_str(), content.c_str(), ret ? "true" : "false");
+/// ...
+/// ~~~~~~~~~~~~~
+///
+inline bool GetContentType(const std::string& url,
+                           std::string& content,
+                           const std::string& useragent = "")
+{
+  using namespace ::kodi::addon;
+
+  char* cContent;
+  bool ret = CAddonBase::m_interface->toKodi->kodi_network->get_content_type(
+      CAddonBase::m_interface->toKodi->kodiBase, url.c_str(), &cContent, useragent.c_str());
+  if (cContent != nullptr)
+  {
+    content = cContent;
+    CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
+                                                 cContent);
+  }
+  return ret;
+}
+//----------------------------------------------------------------------------
+
+//============================================================================
+/// @ingroup cpp_kodi_network
+/// @brief Get cookies stored by CURL in RFC 2109 format.
+///
+/// @param[in] url URL source of the data
+/// @param[out] cookies The text list of available cookies
+/// @return true if successfully done, otherwise false
+///
+///
+/// ------------------------------------------------------------------------
+///
+/// **Example:**
+/// ~~~~~~~~~~~~~{.cpp}
+/// #include <kodi/Network.h>
+/// ...
+/// std::string url = "";
+/// std::string cookies;
+/// bool ret = kodi::network::GetCookies(url, cookies);
+/// fprintf(stderr, "Cookies from URL '%s' are '%s' (return was %s)\n",
+///         url.c_str(), cookies.c_str(), ret ? "true" : "false");
+/// ...
+/// ~~~~~~~~~~~~~
+///
+inline bool GetCookies(const std::string& url, std::string& cookies)
+{
+  using namespace ::kodi::addon;
+
+  char* cCookies;
+  bool ret = CAddonBase::m_interface->toKodi->kodi_network->get_cookies(
+      CAddonBase::m_interface->toKodi->kodiBase, url.c_str(), &cCookies);
+  if (cCookies != nullptr)
+  {
+    cookies = cCookies;
+    CAddonBase::m_interface->toKodi->free_string(CAddonBase::m_interface->toKodi->kodiBase,
+                                                 cCookies);
+  }
+  return ret;
 }
 //----------------------------------------------------------------------------
 

@@ -8,12 +8,29 @@
 
 #pragma once
 
-#include "../AddonBase.h"
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
+
+  typedef struct KODI_HTTP_HEADER
+  {
+    void* handle;
+
+    void (*parse)(void* kodiBase, void* handle, const char* data);
+    void (*add_param)(
+        void* kodiBase, void* handle, const char* param, const char* value, bool overwrite);
+    char* (*get_value)(void* kodiBase, void* handle, const char* param);
+    char** (*get_values)(void* kodiBase, void* handle, const char* param, int* length);
+    char* (*get_header)(void* kodiBase, void* handle);
+    char* (*get_mime_type)(void* kodiBase, void* handle);
+    char* (*get_charset)(void* kodiBase, void* handle);
+    char* (*get_proto_line)(void* kodiBase, void* handle);
+    bool (*is_header_done)(void* kodiBase, void* handle);
+    void (*clear)(void* kodiBase, void* handle);
+  } KODI_HTTP_HEADER;
 
   /*
    * For interface between add-on and kodi.
@@ -28,13 +45,22 @@ extern "C"
    */
   typedef struct AddonToKodiFuncTable_kodi_network
   {
-    bool (*wake_on_lan)(KODI_HANDLE kodiBase, const char* mac);
-    char* (*get_ip_address)(KODI_HANDLE kodiBase);
-    char* (*dns_lookup)(KODI_HANDLE kodiBase, const char* url, bool* ret);
-    char* (*url_encode)(KODI_HANDLE kodiBase, const char* url);
-    char* (*get_hostname)(KODI_HANDLE kodiBase);
-    bool (*is_local_host)(KODI_HANDLE kodiBase, const char* hostname);
+    bool (*wake_on_lan)(void* kodiBase, const char* mac);
+    char* (*get_ip_address)(void* kodiBase);
+    char* (*dns_lookup)(void* kodiBase, const char* url, bool* ret);
+    char* (*url_encode)(void* kodiBase, const char* url);
+    char* (*get_hostname)(void* kodiBase);
+    bool (*is_local_host)(void* kodiBase, const char* hostname);
     bool (*is_host_on_lan)(void* kodiBase, const char* hostname, bool offLineCheck);
+    bool (*get_http_header)(void* kodiBase, const char* url, KODI_HTTP_HEADER* headers);
+    bool (*get_mime_type)(void* kodiBase, const char* url, char** content, const char* useragent);
+    bool (*get_content_type)(void* kodiBase,
+                             const char* url,
+                             char** content,
+                             const char* useragent);
+    bool (*get_cookies)(void* kodiBase, const char* url, char** cookies);
+    bool (*http_header_create)(void* kodiBase, KODI_HTTP_HEADER* headers);
+    void (*http_header_free)(void* kodiBase, KODI_HTTP_HEADER* headers);
   } AddonToKodiFuncTable_kodi_network;
 
 #ifdef __cplusplus

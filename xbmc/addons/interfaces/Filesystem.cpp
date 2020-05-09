@@ -16,6 +16,7 @@
 #include "filesystem/SpecialProtocol.h"
 #include "utils/Crc32.h"
 #include "utils/StringUtils.h"
+#include "utils/URIUtils.h"
 #include "utils/log.h"
 
 #include <vector>
