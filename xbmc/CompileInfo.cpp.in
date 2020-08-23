@@ -7,6 +7,7 @@
  */
 
 #include "CompileInfo.h"
+#include "utils/StringUtils.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -57,6 +58,7 @@ const char* CCompileInfo::GetSCMID()
 
 std::string CCompileInfo::GetOfficialAddonRepos()
 {
+  StringUtils::Split("@APP_ADDON_REPOS@", ',');
   return "@APP_ADDON_REPOS@";
 }
 
