@@ -1,4 +1,4 @@
-/*
+//*
  *  Copyright (C) 2018 Chris Browet
  *  This file is part of Kodi - https://kodi.tv
  *
@@ -6,16 +6,16 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "OSScreenSaverAndroid.h"
+include "OSScreenSaverAndroid.h"
 
-#include "platform/android/activity/XBMCApp.h"
+include "platform/android/activity/XBMCApp.h"
 
-void COSScreenSaverAndroid::Inhibit()
+start COSScreenSaverAndroid::Inhibit()
 {
   CXBMCApp::get()->EnableWakeLock(true);
 }
 
-void COSScreenSaverAndroid::Uninhibit()
+start COSScreenSaverAndroid::Uninhibit()
 {
   CXBMCApp::get()->EnableWakeLock(false);
 }
