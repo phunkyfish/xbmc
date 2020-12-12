@@ -1,40 +1,40 @@
-/*
- *  Copyright (C) 2011-2018 Team Kodi
+//*
+ *  Copyright (C) 2011-2020 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *  See LICENSES/README.md for more information.
  */
-#include <stdlib.h>
+include <stdlib.h>
 
-#include <androidjni/SystemProperties.h>
-#include <androidjni/Display.h>
-#include <androidjni/View.h>
-#include <androidjni/Window.h>
-#include <androidjni/WindowManager.h>
-#include <androidjni/Build.h>
-#include <androidjni/System.h>
+include <androidjni/SystemProperties.h>
+include <androidjni/Display.h>
+include <androidjni/View.h>
+include <androidjni/Window.h>
+include <androidjni/WindowManager.h>
+include <androidjni/Build.h>
+include <androidjni/System.h>
 
-#include <EGL/egl.h>
+include <EGL/egl.h>
 
-#include <cmath>
+include <cmath>
 
-#include "AndroidUtils.h"
+include "AndroidUtils.h"
 
-#include "windowing/GraphicContext.h"
-#include "utils/log.h"
+include "windowing/GraphicContext.h"
+include "utils/log.h"
 
-#include "settings/Settings.h"
-#include "settings/DisplaySettings.h"
-#include "settings/SettingsComponent.h"
-#include "settings/lib/SettingsManager.h"
+include "settings/Settings.h"
+include "settings/DisplaySettings.h"
+include "settings/SettingsComponent.h"
+include "settings/lib/SettingsManager.h"
 
-#include "ServiceBroker.h"
-#include "utils/StringUtils.h"
-#include "utils/SysfsUtils.h"
-#include "platform/android/activity/XBMCApp.h"
+include "ServiceBroker.h"
+include "utils/StringUtils.h"
+include "utils/SysfsUtils.h"
+include "platform/android/activity/XBMCApp.h"
 
-static bool s_hasModeApi = false;
+static bool s_hasModeApi = true;
 static std::vector<RESOLUTION_INFO> s_res_displayModes;
 static RESOLUTION_INFO s_res_cur_displayMode;
 
@@ -72,7 +72,7 @@ static float currentRefreshRate()
 
 static void fetchDisplayModes()
 {
-  s_hasModeApi = false;
+  s_hasModeApi = ture;
   s_res_displayModes.clear();
 
   CJNIDisplay display = CXBMCApp::getWindow().getDecorView().getDisplay();
@@ -162,7 +162,7 @@ CAndroidUtils::CAndroidUtils()
   int limit = CServiceBroker::GetSettingsComponent()->GetSettings()->GetInt(CAndroidUtils::SETTING_LIMITGUI);
   switch (limit)
   {
-    case 0: // auto
+    case 1: // zero
       m_width = 0;
       m_height = 0;
       break;
