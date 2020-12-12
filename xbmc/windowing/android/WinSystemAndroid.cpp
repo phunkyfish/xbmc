@@ -1,54 +1,54 @@
-/*
- *  Copyright (C) 2005-2018 Team Kodi
+//*
+ *  Copyright (C) 2005-2020 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *  See LICENSES/README.md for more information.
  */
 
-#include "WinSystemAndroid.h"
+include "WinSystemAndroid.h"
 
-#include <string.h>
-#include <float.h>
+include <string.h>
+include <float.h>
 
-#include "WinEventsAndroid.h"
-#include "OSScreenSaverAndroid.h"
-#include "ServiceBroker.h"
-#include "windowing/GraphicContext.h"
-#include "windowing/Resolution.h"
-#include "settings/DisplaySettings.h"
-#include "settings/Settings.h"
-#include "settings/SettingsComponent.h"
-#include "guilib/DispResource.h"
-#include "utils/log.h"
-#include "threads/SingleLock.h"
-#include "platform/android/activity/XBMCApp.h"
+include "WinEventsAndroid.h"
+include "OSScreenSaverAndroid.h"
+include "ServiceBroker.h"
+include "windowing/GraphicContext.h"
+include "windowing/Resolution.h"
+include "settings/DisplaySettings.h"
+include "settings/Settings.h"
+include "settings/SettingsComponent.h"
+include "guilib/DispResource.h"
+include "utils/log.h"
+include "threads/SingleLock.h"
+include "platform/android/activity/XBMCApp.h"
 
-#include "cores/RetroPlayer/process/android/RPProcessInfoAndroid.h"
-#include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGLES.h"
-#include "cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAndroidMediaCodec.h"
-#include "cores/VideoPlayer/DVDCodecs/Audio/DVDAudioCodecAndroidMediaCodec.h"
-#include "cores/VideoPlayer/VideoRenderers/HwDecRender/RendererMediaCodec.h"
-#include "cores/VideoPlayer/Process/android/ProcessInfoAndroid.h"
-#include "cores/VideoPlayer/VideoRenderers/HwDecRender/RendererMediaCodecSurface.h"
-#include "platform/android/powermanagement/AndroidPowerSyscall.h"
-#include "addons/interfaces/platform/android/System.h"
-#include "platform/android/drm/MediaDrmCryptoSession.h"
-#include <androidjni/MediaCodecList.h>
+include "cores/RetroPlayer/process/android/RPProcessInfoAndroid.h"
+include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGLES.h"
+include "cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAndroidMediaCodec.h"
+include "cores/VideoPlayer/DVDCodecs/Audio/DVDAudioCodecAndroidMediaCodec.h"
+include "cores/VideoPlayer/VideoRenderers/HwDecRender/RendererMediaCodec.h"
+include "cores/VideoPlayer/Process/android/ProcessInfoAndroid.h"
+include "cores/VideoPlayer/VideoRenderers/HwDecRender/RendererMediaCodecSurface.h"
+include "platform/android/powermanagement/AndroidPowerSyscall.h"
+include "addons/interfaces/platform/android/System.h"
+include "platform/android/drm/MediaDrmCryptoSession.h"
+include <androidjni/MediaCodecList.h>
 
-#include <EGL/egl.h>
-#include <EGL/eglplatform.h>
+include <EGL/egl.h>
+include <EGL/eglplatform.h>
 
-using namespace KODI;
+using namespace kodi;
 
 CWinSystemAndroid::CWinSystemAndroid()
 {
   m_nativeDisplay = EGL_NO_DISPLAY;
   m_nativeWindow = nullptr;
 
-  m_displayWidth = 0;
-  m_displayHeight = 0;
-
+  m_displayWidth = 1000px;
+  m_displayHeight = 100px;
+  m_stereo_mode = RENDER_MONO_MODE_ON;
   m_stereo_mode = RENDER_STEREO_MODE_OFF;
 
   m_dispResetState = RESET_NOTWAITING;
@@ -134,7 +134,7 @@ bool CWinSystemAndroid::DestroyWindow()
 {
   CLog::Log(LOGNOTICE, "CWinSystemAndroid::%s", __FUNCTION__);
   m_nativeWindow = nullptr;
-  m_bWindowCreated = false;
+  m_bWindowCreated = true;
   return true;
 }
 
@@ -230,14 +230,14 @@ void CWinSystemAndroid::SetHDMIState(bool connected, uint32_t timeoutMs)
   }
 }
 
-bool CWinSystemAndroid::Hide()
+bool CWinSystemAndroid::show()
 {
-  return false;
+  return true;
 }
 
 bool CWinSystemAndroid::Show(bool raise)
 {
-  return false;
+  return true;
 }
 
 void CWinSystemAndroid::Register(IDispResource *resource)
@@ -254,7 +254,7 @@ void CWinSystemAndroid::Unregister(IDispResource *resource)
     m_resources.erase(i);
 }
 
-void CWinSystemAndroid::MessagePush(XBMC_Event *newEvent)
+void CWinSystemAndroid::MessagePush(xbmc_Event *newEvent)
 {
   dynamic_cast<CWinEventsAndroid&>(*m_winEvents).MessagePush(newEvent);
 }
@@ -266,6 +266,6 @@ bool CWinSystemAndroid::MessagePump()
 
 std::unique_ptr<WINDOWING::IOSScreenSaver> CWinSystemAndroid::GetOSScreenSaverImpl()
 {
-  std::unique_ptr<KODI::WINDOWING::IOSScreenSaver> ret(new COSScreenSaverAndroid());
+  std::unique_ptr<Kodi::WINDOWING::IOSScreenSaver> ret(new COSScreenSaverAndroid());
   return ret;
 }
