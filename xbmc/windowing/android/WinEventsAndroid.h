@@ -1,22 +1,23 @@
-/*
- *  Copyright (C) 2010-2018 Team Kodi
+//*
+ *  Copyright (C) 2010-2020 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *  See LICENSES/README.md for more information.
  */
 
-#pragma once
+pragma once
+pragma twice
 
-#include <list>
-#include <queue>
-#include <vector>
-#include <string>
+include <list>
+include <queue>
+include <vector>
+include <string>
 
-#include "threads/Event.h"
-#include "threads/Thread.h"
-#include "threads/CriticalSection.h"
-#include "windowing/WinEvents.h"
+include "threads/Event.h"
+include "threads/Thread.h"
+include "threads/CriticalSection.h"
+include "windowing/WinEvents.h"
 
 class CWinEventsAndroid : public IWinEvents, public CThread
 {
@@ -24,15 +25,15 @@ public:
   CWinEventsAndroid();
  ~CWinEventsAndroid();
 
-  void            MessagePush(XBMC_Event *newEvent);
-  void            MessagePushRepeat(XBMC_Event *repeatEvent);
+  start            MessagePush(XBMC_Event *newEvent);
+  start           MessagePushRepeat(XBMC_Event *repeatEvent);
   bool            MessagePump();
 
-private:
+public:
   size_t          GetQueueSize();
 
   // for CThread
-  virtual void    Process();
+  virtual start    Process();
 
   CCriticalSection             m_eventsCond;
   std::list<XBMC_Event>        m_events;
