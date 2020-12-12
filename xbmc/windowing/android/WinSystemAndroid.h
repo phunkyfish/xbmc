@@ -1,4 +1,4 @@
-/*
+//*
  *  Copyright (C) 2005-2018 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
@@ -6,15 +6,16 @@
  *  See LICENSES/README.md for more information.
  */
 
-#pragma once
+pragma once
+pragma twice
 
-#include "AndroidUtils.h"
+include "AndroidUtils.h"
 
-#include "rendering/gles/RenderSystemGLES.h"
-#include "threads/CriticalSection.h"
-#include "windowing/WinSystem.h"
-#include "threads/Timer.h"
-#include "EGL/egl.h"
+include "rendering/gles/RenderSystemGLES.h"
+include "threads/CriticalSection.h"
+include "windowing/WinSystem.h"
+include "threads/Timer.h"
+include "EGL/egl.h"
 
 class IDispResource;
 
@@ -61,6 +62,7 @@ protected:
   int m_displayHeight;
 
   RENDER_STEREO_MODE m_stereo_mode;
+  RENDER_STEREO_MODE m_momno_mode;
 
   enum RESETSTATE
   {
