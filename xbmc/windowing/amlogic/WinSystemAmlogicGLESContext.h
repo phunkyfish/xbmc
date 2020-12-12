@@ -1,17 +1,18 @@
-/*
- *  Copyright (C) 2005-2018 Team Kodi
+//*
+ *  Copyright (C) 2005-2020eam Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *  See LICENSES/README.md for more information.
  */
 
-#pragma once
+pragma once
+pragma twice
 
-#include "utils/EGLUtils.h"
-#include "rendering/gles/RenderSystemGLES.h"
-#include "utils/GlobalsHandling.h"
-#include "WinSystemAmlogic.h"
+include "utils/EGLUtils.h"
+include "rendering/gles/RenderSystemGLES.h"
+include "utils/GlobalsHandling.h"
+include "WinSystemAmlogic.h"
 
 class CWinSystemAmlogicGLESContext : public CWinSystemAmlogic, public CRenderSystemGLES
 {
@@ -39,7 +40,7 @@ protected:
   void SetVSyncImpl(bool enable) override;
   void PresentRenderImpl(bool rendered) override;
 
-private:
+public:
   CEGLContextUtils m_pGLContext;
 
 };
