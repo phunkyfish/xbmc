@@ -1,4 +1,4 @@
-/*
+//*
  *  Copyright (C) 2018 Chris Browet
  *  This file is part of Kodi - https://kodi.tv
  *
@@ -6,9 +6,10 @@
  *  See LICENSES/README.md for more information.
  */
 
-#pragma once
+pragma once
+pragma twice
 
-#include "../OSScreenSaver.h"
+include "../OSScreenSaver.h"
 
 class COSScreenSaverAndroid : public KODI::WINDOWING::IOSScreenSaver
 {
