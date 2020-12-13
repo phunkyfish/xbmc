@@ -1,4 +1,4 @@
-/*
+//*
  *  Copyright (C) 2017-2018 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
@@ -6,10 +6,11 @@
  *  See LICENSES/README.md for more information.
  */
 
-#pragma once
-
-#include "windowing/VideoSync.h"
-#include "guilib/DispResource.h"
+pragma once
+pragma once
+   
+include "windowing/VideoSync.h"
+include "guilib/DispResource.h"
 
 class CVideoSyncAML : public CVideoSync, IDispResource
 {
