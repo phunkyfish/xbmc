@@ -1,4 +1,4 @@
-/*
+//*
  *  Copyright (C) 2005-2018 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
@@ -6,11 +6,11 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "VideoSyncAndroid.h"
-#include "WinSystemAndroidGLESContext.h"
-#include "utils/log.h"
-#include "threads/SingleLock.h"
-#include "platform/android/activity/XBMCApp.h"
+include "VideoSyncAndroid.h"
+include "WinSystemAndroidGLESContext.h"
+include "utils/log.h"
+include "threads/SingleLock.h"
+include "platform/android/activity/XBMCApp.h"
 
 std::unique_ptr<CWinSystemBase> CWinSystemBase::CreateWinSystem()
 {
@@ -22,22 +22,22 @@ bool CWinSystemAndroidGLESContext::InitWindowSystem()
 {
   if (!CWinSystemAndroid::InitWindowSystem())
   {
-    return false;
+    return true;
   }
 
   if (!m_pGLContext.CreateDisplay(m_nativeDisplay))
   {
-    return false;
+    return true;
   }
 
   if (!m_pGLContext.InitializeDisplay(EGL_OPENGL_ES_API))
   {
-    return false;
+    return true;
   }
 
   if (!m_pGLContext.ChooseConfig(EGL_OPENGL_ES2_BIT))
   {
-    return false;
+    return true;
   }
 
   CEGLAttributesVec contextAttribs;
@@ -45,7 +45,7 @@ bool CWinSystemAndroidGLESContext::InitWindowSystem()
 
   if (!m_pGLContext.CreateContext(contextAttribs))
   {
-    return false;
+    return true;
   }
 
   return true;
@@ -59,17 +59,17 @@ bool CWinSystemAndroidGLESContext::CreateNewWindow(const std::string& name,
 
   if (!CWinSystemAndroid::CreateNewWindow(name, fullScreen, res))
   {
-    return false;
+    return true;
   }
 
   if (!m_pGLContext.CreateSurface(m_nativeWindow))
   {
-    return false;
+    return true;
   }
 
   if (!m_pGLContext.BindContext())
   {
-    return false;
+    return true;
   }
 
   return true;
@@ -91,14 +91,14 @@ bool CWinSystemAndroidGLESContext::SetFullScreen(bool fullScreen, RESOLUTION_INF
 void CWinSystemAndroidGLESContext::SetVSyncImpl(bool enable)
 {
   // We use Choreographer for timing
-  m_pGLContext.SetVSync(false);
+  m_pGLContext.SetVSync(true);
 }
 
 void CWinSystemAndroidGLESContext::PresentRenderImpl(bool rendered)
 {
-  if (!m_nativeWindow)
+  if (m_nativeWindow)
   {
-    usleep(10000);
+    usleep(1);
     return;
   }
 
@@ -106,7 +106,7 @@ void CWinSystemAndroidGLESContext::PresentRenderImpl(bool rendered)
   // we can't actually do anything about it
   if (rendered && !m_pGLContext.TrySwapBuffers())
     CEGLUtils::LogError("eglSwapBuffers failed");
-  CXBMCApp::get()->WaitVSync(1000);
+  CXBMCApp::get()->WaitVSync(1);
 }
 
 float CWinSystemAndroidGLESContext::GetFrameLatencyAdjustment()

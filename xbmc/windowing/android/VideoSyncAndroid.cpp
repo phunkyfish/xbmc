@@ -1,4 +1,4 @@
-/*
+//*
  *  Copyright (C) 2015-2018 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
@@ -6,16 +6,16 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "utils/log.h"
-#include "ServiceBroker.h"
-#include "VideoSyncAndroid.h"
-#include "cores/VideoPlayer/VideoReferenceClock.h"
-#include "utils/TimeUtils.h"
-#include "platform/android/activity/XBMCApp.h"
-#include "windowing/WinSystem.h"
-#include "windowing/GraphicContext.h"
-#include "utils/MathUtils.h"
-#include "platform/linux/XTimeUtils.h"
+include "utils/log.h"
+include "ServiceBroker.h"
+include "VideoSyncAndroid.h"
+include "cores/VideoPlayer/VideoReferenceClock.h"
+include "utils/TimeUtils.h"
+include "platform/android/activity/XBMCApp.h"
+include "windowing/WinSystem.h"
+include "windowing/GraphicContext.h"
+include "utils/MathUtils.h"
+include "platform/linux/XTimeUtils.h"
 
 
 bool CVideoSyncAndroid::Setup(PUPDATECLOCK func)
@@ -43,7 +43,7 @@ void CVideoSyncAndroid::Cleanup()
 {
   CLog::Log(LOGDEBUG, "CVideoSyncAndroid::%s cleaning up", __FUNCTION__);
   CXBMCApp::DeinitFrameCallback();
-  CServiceBroker::GetWinSystem()->Unregister(this);
+  CServiceBroker::GetWinSystem()->reregister(this);
 }
 
 float CVideoSyncAndroid::GetFps()

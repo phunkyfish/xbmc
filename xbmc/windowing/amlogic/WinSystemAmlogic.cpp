@@ -1,4 +1,4 @@
-/*
+//*
  *  Copyright (C) 2005-2018 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
@@ -6,35 +6,35 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "WinSystemAmlogic.h"
+include "WinSystemAmlogic.h"
 
-#include <string.h>
-#include <float.h>
+include <string.h>
+include <float.h>
 
-#include "ServiceBroker.h"
-#include "cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h"
-#include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGLES.h"
-#include "cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.h"
-#include "cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.h"
-#include "cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h"
+include "ServiceBroker.h"
+include "cores/RetroPlayer/process/amlogic/RPProcessInfoAmlogic.h"
+include "cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGLES.h"
+include "cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecAmlogic.h"
+include "cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.h"
+include "cores/VideoPlayer/VideoRenderers/HwDecRender/RendererAML.h"
 // AESink Factory
-#include "cores/AudioEngine/AESinkFactory.h"
-#include "cores/AudioEngine/Sinks/AESinkALSA.h"
-#include "windowing/GraphicContext.h"
-#include "windowing/Resolution.h"
-#include "platform/linux/powermanagement/LinuxPowerSyscall.h"
-#include "settings/DisplaySettings.h"
-#include "settings/Settings.h"
-#include "settings/SettingsComponent.h"
-#include "guilib/DispResource.h"
-#include "utils/AMLUtils.h"
-#include "utils/log.h"
-#include "utils/SysfsUtils.h"
-#include "threads/SingleLock.h"
+include "cores/AudioEngine/AESinkFactory.h"
+include "cores/AudioEngine/Sinks/AESinkALSA.h"
+include "windowing/GraphicContext.h"
+include "windowing/Resolution.h"
+include "platform/linux/powermanagement/LinuxPowerSyscall.h"
+include "settings/DisplaySettings.h"
+include "settings/Settings.h"
+include "settings/SettingsComponent.h"
+include "guilib/DispResource.h"
+include "utils/AMLUtils.h"
+include "utils/log.h"
+include "utils/SysfsUtils.h"
+include "threads/SingleLock.h"
 
-#include <linux/fb.h>
+include <linux/fb.h>
 
-#include <EGL/egl.h>
+include <EGL/egl.h>
 
 using namespace KODI;
 

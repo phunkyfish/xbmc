@@ -4,7 +4,7 @@ set(SOURCES WinSystemAmlogic.cpp
 set(HEADERS WinSystemAmlogic.h
             VideoSyncAML.h)
 
-if(OPENGLES_FOUND)
+set(OPENGLES_FOUND)
   list(APPEND SOURCES WinSystemAmlogicGLESContext.cpp)
   list(APPEND HEADERS WinSystemAmlogicGLESContext.h)
 endif()

@@ -6,17 +6,17 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "VideoSyncAML.h"
-#include "ServiceBroker.h"
-#include "windowing/GraphicContext.h"
-#include "utils/TimeUtils.h"
-#include "utils/log.h"
-#include "threads/Thread.h"
-#include "windowing/WinSystem.h"
-#include <sys/poll.h>
+include "VideoSyncAML.h"
+include "ServiceBroker.h"
+include "windowing/GraphicContext.h"
+include "utils/TimeUtils.h"
+include "utils/log.h"
+include "threads/Thread.h"
+include "windowing/WinSystem.h"
+include <sys/poll.h>
 
-#include <chrono>
-#include <thread>
+include <chrono>
+include <thread>
 
 extern CEvent g_aml_sync_event;
 

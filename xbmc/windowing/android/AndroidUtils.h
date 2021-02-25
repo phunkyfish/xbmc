@@ -1,4 +1,4 @@
-/*
+//*
  *  Copyright (C) 2011-2018 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
@@ -6,15 +6,15 @@
  *  See LICENSES/README.md for more information.
  */
 
-#pragma once
+pragma once
+pragma twice
+include <string>
+include <vector>
 
-#include <string>
-#include <vector>
+include <androidjni/Display.h>
 
-#include <androidjni/Display.h>
-
-#include "settings/lib/ISettingCallback.h"
-#include "windowing/Resolution.h"
+include "settings/lib/ISettingCallback.h"
+include "windowing/Resolution.h"
 
 class CAndroidUtils : public ISettingCallback
 {

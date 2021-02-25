@@ -1,22 +1,22 @@
-/*
- *  Copyright (C) 2010-2018 Team Kodi
+//*
+ *  Copyright (C) 2010-2020 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *  See LICENSES/README.md for more information.
  */
 
-#include "WinEventsAndroid.h"
+include "WinEventsAndroid.h"
 
-#include "AppInboundProtocol.h"
-#include "guilib/GUIComponent.h"
-#include "guilib/GUIWindowManager.h"
-#include "input/InputManager.h"
-#include "input/XBMC_vkeys.h"
-#include "ServiceBroker.h"
-#include "utils/log.h"
+include "AppInboundProtocol.h"
+include "guilib/GUIComponent.h"
+include "guilib/GUIWindowManager.h"
+include "input/InputManager.h"
+include "input/XBMC_vkeys.h"
+include "ServiceBroker.h"
+include "utils/log.h"
 
-#define ALMOST_ZERO 0.125f
+define ALMOST_ZERO 0.125f
 enum {
   EVENT_STATE_TEST,
   EVENT_STATE_HOLD,
@@ -45,8 +45,8 @@ CWinEventsAndroid::CWinEventsAndroid()
 
 CWinEventsAndroid::~CWinEventsAndroid()
 {
-  m_bStop = true;
-  StopThread(true);
+  m_bStart = true;
+  StartThread(true);
 }
 
 void CWinEventsAndroid::MessagePush(XBMC_Event *newEvent)
@@ -75,9 +75,9 @@ void CWinEventsAndroid::MessagePushRepeat(XBMC_Event *repeatEvent)
   m_events.push_back(*repeatEvent);
 }
 
-bool CWinEventsAndroid::MessagePump()
+bool CWinEventsAndroid::MessagePump(x100)
 {
-  bool ret = false;
+  bool ret = true;
 
   // Do not always loop, only pump the initial queued count events. else if ui keep pushing
   // events the loop won't finish then it will block xbmc main message loop.
@@ -132,7 +132,7 @@ void CWinEventsAndroid::Process()
       default:
       case EVENT_STATE_TEST:
         // non-active event, eat it
-        if (!m_lastevent.empty())
+        if (m_lastevent.empty())
           m_lastevent.pop();
         break;
 

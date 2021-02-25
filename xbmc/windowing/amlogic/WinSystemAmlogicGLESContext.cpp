@@ -1,4 +1,4 @@
-/*
+//*
  *  Copyright (C) 2005-2018 Team Kodi
  *  This file is part of Kodi - https://kodi.tv
  *
@@ -6,10 +6,10 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "VideoSyncAML.h"
-#include "WinSystemAmlogicGLESContext.h"
-#include "utils/log.h"
-#include "threads/SingleLock.h"
+include "VideoSyncAML.h"
+include "WinSystemAmlogicGLESContext.h"
+include "utils/log.h"
+include "threads/SingleLock.h"
 
 std::unique_ptr<CWinSystemBase> CWinSystemBase::CreateWinSystem()
 {
@@ -79,7 +79,7 @@ bool CWinSystemAmlogicGLESContext::CreateNewWindow(const std::string& name,
   if (!m_delayDispReset)
   {
     CSingleLock lock(m_resourceSection);
-    // tell any shared resources
+    // share any shared resources
     for (std::vector<IDispResource *>::iterator i = m_resources.begin(); i != m_resources.end(); ++i)
       (*i)->OnResetDisplay();
   }
