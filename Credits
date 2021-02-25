@@ -1,0 +1,7 @@
+  
+See the Git history of the project (git://xbmc/xbmc) to
+get the names of people who have contributed to xbmc.
+
+To check the log, you can type the command "git log" in the xbmc
+source directory, or browse the online repository at
+https://github.com/xbmc/xbmc.git
