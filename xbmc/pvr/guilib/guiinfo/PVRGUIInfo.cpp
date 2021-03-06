@@ -35,6 +35,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "threads/SingleLock.h"
+#include "threads/SystemClock.h"
 #include "utils/StringUtils.h"
 
 #include <cmath>
@@ -130,8 +131,8 @@ void CPVRGUIInfo::Notify(const PVREvent& event)
 
 void CPVRGUIInfo::Process()
 {
-  unsigned int iLoop = 0;
-  int toggleInterval = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_iPVRInfoToggleInterval / 1000;
+  int toggleIntervalMs = CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_iPVRInfoToggleInterval;
+  XbmcThreads::EndTime cacheTimer(toggleIntervalMs);
 
   /* updated on request */
   CServiceBroker::GetPVRManager().Events().Subscribe(this, &CPVRGUIInfo::Notify);
@@ -177,11 +178,11 @@ void CPVRGUIInfo::Process()
     std::this_thread::yield();
 
     // Update the backend cache every toggleInterval seconds
-    if (!m_bStop && iLoop % toggleInterval == 0)
+    if (!m_bStop && cacheTimer.IsTimePast())
+    {
       UpdateBackendCache();
-
-    if (++iLoop == 1000)
-      iLoop = 0;
+      cacheTimer.Set(toggleIntervalMs);
+    }
 
     if (!m_bStop)
       CThread::Sleep(500);
