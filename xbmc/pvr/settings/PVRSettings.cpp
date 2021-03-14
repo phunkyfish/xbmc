@@ -40,7 +40,7 @@ CPVRSettings::CPVRSettings(const std::set<std::string>& settingNames)
   {
     // statics must only be registered once, not per instance
     settings->GetSettingsManager()->RegisterSettingOptionsFiller("pvrrecordmargins", MarginTimeFiller);
-    settings->GetSettingsManager()->AddDynamicCondition("pvrsettingvisible", IsSettingVisible);
+    settings->GetSettingsManager()->AddDynamicCondition("pvrsettingenable", IsSettingEnabled);
     settings->GetSettingsManager()->AddDynamicCondition("checkpvrparentalpin", CheckParentalPin);
   }
   m_iInstances++;
@@ -54,7 +54,7 @@ CPVRSettings::~CPVRSettings()
   if (m_iInstances == 0)
   {
     settings->GetSettingsManager()->RemoveDynamicCondition("checkpvrparentalpin");
-    settings->GetSettingsManager()->RemoveDynamicCondition("pvrsettingvisible");
+    settings->GetSettingsManager()->RemoveDynamicCondition("pvrsettingenable");
     settings->GetSettingsManager()->UnregisterSettingOptionsFiller("pvrrecordmargins");
   }
 
@@ -165,7 +165,7 @@ void CPVRSettings::MarginTimeFiller(const SettingConstPtr& /*setting*/,
   }
 }
 
-bool CPVRSettings::IsSettingVisible(const std::string& condition,
+bool CPVRSettings::IsSettingEnabled(const std::string& condition,
                                     const std::string& value,
                                     const std::shared_ptr<const CSetting>& setting,
                                     void* data)
@@ -177,23 +177,29 @@ bool CPVRSettings::IsSettingVisible(const std::string& condition,
 
   if (settingId == CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERS)
   {
-    // Setting is only visible if exactly one PVR client is enabled or
+    // Setting is only enabled if exactly one PVR client is enabled.
+    return CServiceBroker::GetPVRManager().Clients()->EnabledClientAmount() == 1;
+  }
+  else if (settingId == CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERSALWAYS)
+  {
+    // Setting is only enabled if more than one PVR client is enabled.
+    return CServiceBroker::GetPVRManager().Clients()->EnabledClientAmount() > 1;
+  }
+  else if (settingId == CSettings::SETTING_PVRMANAGER_STARTGROUPCHANNELNUMBERSFROMONE)
+  {
+    // Setting is only enabled if exactly one PVR client is enabled or
     // the expert setting to always use backend numbers is enabled
     const auto& settings = CServiceBroker::GetSettingsComponent()->GetSettings();
     int enabledClientAmount = CServiceBroker::GetPVRManager().Clients()->EnabledClientAmount();
 
-    return enabledClientAmount == 1 ||
-           (settings->GetBool(CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERSALWAYS) &&
+    return (!settings->GetBool(CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERS) &&
+            enabledClientAmount == 1) ||
+           (!settings->GetBool(CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERSALWAYS) &&
             enabledClientAmount > 1);
-  }
-  else if (settingId == CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERSALWAYS)
-  {
-    // Setting is only visible if more than one PVR client is enabled.
-    return CServiceBroker::GetPVRManager().Clients()->EnabledClientAmount() > 1;
   }
   else if (settingId == CSettings::SETTING_PVRMANAGER_CLIENTPRIORITIES)
   {
-    // Setting is only visible if more than one PVR client is enabeld.
+    // Setting is only enabled if more than one PVR client is enabled.
     return CServiceBroker::GetPVRManager().Clients()->EnabledClientAmount() > 1;
   }
   else

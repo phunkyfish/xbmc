@@ -79,6 +79,7 @@ std::shared_ptr<PVRChannelGroupMember> CPVRChannelGroup::EmptyMember = std::make
 void CPVRChannelGroup::OnInit()
 {
   CServiceBroker::GetSettingsComponent()->GetSettings()->RegisterCallback(this, {
+    CSettings::SETTING_PVRMANAGER_SYNCCHANNELGROUPS,
     CSettings::SETTING_PVRMANAGER_BACKENDCHANNELORDER,
     CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERS,
     CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERSALWAYS,
@@ -899,6 +900,7 @@ void CPVRChannelGroup::OnSettingChanged(const std::shared_ptr<const CSetting>& s
   if (settingId == CSettings::SETTING_PVRMANAGER_SYNCCHANNELGROUPS ||
       settingId == CSettings::SETTING_PVRMANAGER_BACKENDCHANNELORDER ||
       settingId == CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERS ||
+      settingId == CSettings::SETTING_PVRMANAGER_USEBACKENDCHANNELNUMBERSALWAYS ||
       settingId == CSettings::SETTING_PVRMANAGER_STARTGROUPCHANNELNUMBERSFROMONE)
   {
     const std::shared_ptr<CSettings> settings = CServiceBroker::GetSettingsComponent()->GetSettings();
