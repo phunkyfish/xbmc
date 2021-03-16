@@ -20,6 +20,7 @@
 #include "InputStreamAddon.h"
 #include "InputStreamMultiSource.h"
 #include "InputStreamPVRChannel.h"
+#include "InputStreamPVRMedia.h"
 #include "InputStreamPVRRecording.h"
 #include "ServiceBroker.h"
 #include "URL.h"
@@ -104,6 +105,8 @@ std::shared_ptr<CDVDInputStream> CDVDFactoryInputStream::CreateInputStream(IVide
     return std::shared_ptr<CInputStreamPVRChannel>(new CInputStreamPVRChannel(pPlayer, fileitem));
   else if (URIUtils::IsPVRRecording(file))
     return std::shared_ptr<CInputStreamPVRRecording>(new CInputStreamPVRRecording(pPlayer, fileitem));
+  else if (URIUtils::IsPVRMediaTag(file))
+    return std::shared_ptr<CInputStreamPVRMedia>(new CInputStreamPVRMedia(pPlayer, fileitem));
 #ifdef HAVE_LIBBLURAY
   else if (fileitem.IsType(".bdmv") || fileitem.IsType(".mpls")
           || fileitem.IsType(".bdm") || fileitem.IsType(".mpl")

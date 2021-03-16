@@ -16,6 +16,7 @@ namespace PVR
 {
   class CPVRChannel;
   class CPVREpgInfoTag;
+  class CPVRMediaTag;
   class CPVRRecording;
   class CPVRTimerInfoTag;
 
@@ -30,6 +31,7 @@ namespace PVR
     std::shared_ptr<CPVRChannel> GetChannel() const;
     std::shared_ptr<CPVRTimerInfoTag> GetTimerInfoTag() const;
     std::shared_ptr<CPVRRecording> GetRecording() const;
+    std::shared_ptr<CPVRMediaTag> GetMediaTag() const;
 
     bool IsRadio() const;
 

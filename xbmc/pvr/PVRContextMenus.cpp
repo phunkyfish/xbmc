@@ -18,6 +18,9 @@
 #include "pvr/channels/PVRChannelGroupsContainer.h"
 #include "pvr/epg/EpgInfoTag.h"
 #include "pvr/guilib/PVRGUIActions.h"
+#include "pvr/media/PVRMedia.h"
+#include "pvr/media/PVRMediaPath.h"
+#include "pvr/media/PVRMediaTag.h"
 #include "pvr/recordings/PVRRecording.h"
 #include "pvr/recordings/PVRRecordings.h"
 #include "pvr/recordings/PVRRecordingsPath.h"
@@ -53,6 +56,7 @@ namespace PVR
 
     DECL_STATICCONTEXTMENUITEM(PlayEpgTag);
     DECL_STATICCONTEXTMENUITEM(PlayRecording);
+    DECL_STATICCONTEXTMENUITEM(PlayMediaTag);
     DECL_CONTEXTMENUITEM(ShowInformation);
     DECL_STATICCONTEXTMENUITEM(ShowChannelGuide);
     DECL_STATICCONTEXTMENUITEM(FindSimilar);
@@ -67,6 +71,10 @@ namespace PVR
     DECL_CONTEXTMENUITEM(DeleteRecording);
     DECL_STATICCONTEXTMENUITEM(UndeleteRecording);
     DECL_STATICCONTEXTMENUITEM(DeleteWatchedRecordings);
+    DECL_STATICCONTEXTMENUITEM(EditMediaTag);
+    DECL_CONTEXTMENUITEM(DeleteMediaTag);
+    DECL_STATICCONTEXTMENUITEM(UndeleteMediaTag);
+    DECL_STATICCONTEXTMENUITEM(DeleteWatchedMedia);
     DECL_CONTEXTMENUITEM(ToggleTimerState);
     DECL_STATICCONTEXTMENUITEM(AddReminder);
 
@@ -134,12 +142,33 @@ namespace PVR
     }
 
     ///////////////////////////////////////////////////////////////////////////////
+    // Play media tag
+
+    bool PlayMediaTag::IsVisible(const CFileItem& item) const
+    {
+      const std::shared_ptr<CPVRMediaTag> mediaTag = item.GetPVRMediaInfoTag();
+      if (mediaTag)
+        return !mediaTag->IsDeleted();
+
+      return false;
+    }
+
+    bool PlayMediaTag::Execute(const CFileItemPtr& item) const
+    {
+      return CServiceBroker::GetPVRManager().GUIActions()->PlayMediaTag(item,
+                                                                        true /* bCheckResume */);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
     // Show information (epg, recording)
 
     std::string ShowInformation::GetLabel(const CFileItem& item) const
     {
       if (item.GetPVRRecordingInfoTag())
         return g_localizeStrings.Get(19053); /* Recording Information */
+
+      if (item.GetPVRMediaInfoTag())
+        return g_localizeStrings.Get(19353); /* Media Information */
 
       return g_localizeStrings.Get(19047); /* Programme information */
     }
@@ -160,6 +189,9 @@ namespace PVR
       if (item.GetPVRRecordingInfoTag())
         return true;
 
+      if (item.GetPVRMediaInfoTag())
+        return true;
+
       return false;
     }
 
@@ -167,6 +199,9 @@ namespace PVR
     {
       if (item->GetPVRRecordingInfoTag())
         return CServiceBroker::GetPVRManager().GUIActions()->ShowRecordingInfo(item);
+
+      if (item->GetPVRMediaInfoTag())
+        return CServiceBroker::GetPVRManager().GUIActions()->ShowMediaTagInfo(item);
 
       return CServiceBroker::GetPVRManager().GUIActions()->ShowEPGInfo(item);
     }
@@ -207,6 +242,10 @@ namespace PVR
       const std::shared_ptr<CPVRRecording> recording(item.GetPVRRecordingInfoTag());
       if (recording)
         return !recording->IsDeleted();
+
+      const std::shared_ptr<CPVRMediaTag> mediaTag(item.GetPVRMediaInfoTag());
+      if (mediaTag)
+        return !mediaTag->IsDeleted();
 
       return false;
     }
@@ -396,6 +435,93 @@ namespace PVR
     bool DeleteWatchedRecordings::Execute(const std::shared_ptr<CFileItem>& item) const
     {
       return CServiceBroker::GetPVRManager().GUIActions()->DeleteWatchedRecordings(item);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Edit mediaTag
+
+    bool EditMediaTag::IsVisible(const CFileItem& item) const
+    {
+      const std::shared_ptr<CPVRMediaTag> mediaTag(item.GetPVRMediaInfoTag());
+      if (mediaTag && !mediaTag->IsDeleted())
+      {
+        return CServiceBroker::GetPVRManager().GUIActions()->CanEditMediaTag(item);
+      }
+      return false;
+    }
+
+    bool EditMediaTag::Execute(const CFileItemPtr& item) const
+    {
+      return CServiceBroker::GetPVRManager().GUIActions()->EditMediaTag(item);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Delete mediaTag
+
+    std::string DeleteMediaTag::GetLabel(const CFileItem& item) const
+    {
+      const std::shared_ptr<CPVRMediaTag> mediaTag(item.GetPVRMediaInfoTag());
+      if (mediaTag && mediaTag->IsDeleted())
+        return g_localizeStrings.Get(19291); /* Delete permanently */
+
+      return g_localizeStrings.Get(117); /* Delete */
+    }
+
+    bool DeleteMediaTag::IsVisible(const CFileItem& item) const
+    {
+      const std::shared_ptr<CPVRClient> client = CServiceBroker::GetPVRManager().GetClient(item);
+
+      const std::shared_ptr<CPVRMediaTag> mediaTag(item.GetPVRMediaInfoTag());
+      if (mediaTag)
+        return client && client->GetClientCapabilities().SupportsMediaDelete();
+
+      // media folder?
+      if (item.m_bIsFolder)
+      {
+        const CPVRMediaPath path(item.GetPath());
+        return path.IsValid() && !path.IsMediaRoot();
+      }
+
+      return false;
+    }
+
+    bool DeleteMediaTag::Execute(const CFileItemPtr& item) const
+    {
+      return CServiceBroker::GetPVRManager().GUIActions()->DeleteMediaTag(item);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Undelete mediaTag
+
+    bool UndeleteMediaTag::IsVisible(const CFileItem& item) const
+    {
+      const std::shared_ptr<CPVRMediaTag> mediaTag(item.GetPVRMediaInfoTag());
+      if (mediaTag && mediaTag->IsDeleted())
+        return true;
+
+      return false;
+    }
+
+    bool UndeleteMediaTag::Execute(const CFileItemPtr& item) const
+    {
+      return CServiceBroker::GetPVRManager().GUIActions()->UndeleteMediaTag(item);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////
+    // Delete watched media
+
+    bool DeleteWatchedMedia::IsVisible(const CFileItem& item) const
+    {
+      // media folder?
+      if (item.m_bIsFolder && !item.IsParentFolder())
+        return CPVRMediaPath(item.GetPath()).IsValid();
+
+      return false;
+    }
+
+    bool DeleteWatchedMedia::Execute(const std::shared_ptr<CFileItem>& item) const
+    {
+      return CServiceBroker::GetPVRManager().GUIActions()->DeleteWatchedMedia(item);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -612,6 +738,10 @@ namespace PVR
         return item.IsDeletedPVRRecording();
       else if (m_hook.IsRecordingHook())
         return item.IsUsablePVRRecording();
+      else if (m_hook.IsDeletedMediaTagHook())
+        return item.IsDeletedPVRMediaTag();
+      else if (m_hook.IsMediaTagHook())
+        return item.IsUsablePVRMediaTag();
       else if (m_hook.IsTimerHook())
         return item.IsPVRTimer();
       else
@@ -632,6 +762,12 @@ namespace PVR
         return client->CallRecordingMenuHook(m_hook, item->GetPVRRecordingInfoTag(), true) == PVR_ERROR_NO_ERROR;
       else if (item->IsUsablePVRRecording())
         return client->CallRecordingMenuHook(m_hook, item->GetPVRRecordingInfoTag(), false) == PVR_ERROR_NO_ERROR;
+      else if (item->IsDeletedPVRMediaTag())
+        return client->CallMediaTagMenuHook(m_hook, item->GetPVRMediaInfoTag(), true) ==
+               PVR_ERROR_NO_ERROR;
+      else if (item->IsUsablePVRMediaTag())
+        return client->CallMediaTagMenuHook(m_hook, item->GetPVRMediaInfoTag(), false) ==
+               PVR_ERROR_NO_ERROR;
       else if (item->IsPVRTimer())
         return client->CallTimerMenuHook(m_hook, item->GetPVRTimerInfoTag()) == PVR_ERROR_NO_ERROR;
       else
@@ -651,6 +787,7 @@ namespace PVR
     m_items = {
         std::make_shared<CONTEXTMENUITEM::PlayEpgTag>(19190), /* Play programme */
         std::make_shared<CONTEXTMENUITEM::PlayRecording>(19687), /* Play recording */
+        std::make_shared<CONTEXTMENUITEM::PlayMediaTag>(19688), /* Play media tag */
         std::make_shared<CONTEXTMENUITEM::ShowInformation>(),
         std::make_shared<CONTEXTMENUITEM::ShowChannelGuide>(19686), /* Channel guide */
         std::make_shared<CONTEXTMENUITEM::FindSimilar>(19003), /* Find similar */
@@ -666,6 +803,10 @@ namespace PVR
         std::make_shared<CONTEXTMENUITEM::DeleteRecording>(),
         std::make_shared<CONTEXTMENUITEM::UndeleteRecording>(19290), /* Undelete */
         std::make_shared<CONTEXTMENUITEM::DeleteWatchedRecordings>(19327), /* Delete watched */
+        std::make_shared<CONTEXTMENUITEM::EditMediaTag>(21450), /* Edit */
+        std::make_shared<CONTEXTMENUITEM::DeleteMediaTag>(),
+        std::make_shared<CONTEXTMENUITEM::UndeleteMediaTag>(19290), /* Undelete */
+        std::make_shared<CONTEXTMENUITEM::DeleteWatchedMedia>(19327), /* Delete watched */
         std::make_shared<CONTEXTMENUITEM::AddReminder>(826), /* Set reminder */
     };
   }

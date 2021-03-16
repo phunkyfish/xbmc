@@ -37,6 +37,8 @@ class CPVRStreamProperties;
 class CPVRTimerInfoTag;
 class CPVRTimerType;
 class CPVRTimersContainer;
+class CPVRMediaTag;
+class CPVRMedia;
 
 #define PVR_INVALID_CLIENT_ID (-2)
 
@@ -253,6 +255,104 @@ public:
   {
     return m_addonCapabilities && m_addonCapabilities->bSupportsRecordings &&
            m_addonCapabilities->bSupportsRecordingSize;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////
+  //
+  // Media
+  //
+  /////////////////////////////////////////////////////////////////////////////////
+
+  /*!
+   * @brief Check whether this add-on supports media.
+   * @return True if supported, false otherwise.
+   */
+  bool SupportsMedia() const { return m_addonCapabilities && m_addonCapabilities->bSupportsMedia; }
+
+  /*!
+   * @brief Check whether this add-on supports deleting media.
+   * @return True if supported, false otherwise.
+   */
+  bool SupportsMediaDelete() const
+  {
+    return m_addonCapabilities && m_addonCapabilities->bSupportsMedia &&
+           m_addonCapabilities->bSupportsMediaDelete;
+  }
+
+  /*!
+   * @brief Check whether this add-on supports undelete of deleted media.
+   * @return True if supported, false otherwise.
+   */
+  bool SupportsMediaUndelete() const
+  {
+    return m_addonCapabilities && m_addonCapabilities->bSupportsMedia &&
+           m_addonCapabilities->bSupportsMediaUndelete;
+  }
+
+  /*!
+   * @brief Check whether this add-on supports play count for media.
+   * @return True if supported, false otherwise.
+   */
+  bool SupportsMediaPlayCount() const
+  {
+    return m_addonCapabilities && m_addonCapabilities->bSupportsMedia &&
+           m_addonCapabilities->bSupportsMediaTagPlayCount;
+  }
+
+  /*!
+   * @brief Check whether this add-on supports store/retrieve of last played position for media..
+   * @return True if supported, false otherwise.
+   */
+  bool SupportsMediaLastPlayedPosition() const
+  {
+    return m_addonCapabilities && m_addonCapabilities->bSupportsMedia &&
+           m_addonCapabilities->bSupportsLastPlayedPosition;
+  }
+
+  /*!
+   * @brief Check whether this add-on supports retrieving an edit decision list for media.
+   * @return True if supported, false otherwise.
+   */
+  bool SupportsMediaEdl() const
+  {
+    return m_addonCapabilities && m_addonCapabilities->bSupportsMedia &&
+           m_addonCapabilities->bSupportsMediaTagEdl;
+  }
+
+  /*!
+   * @brief Check whether this add-on supports renaming media..
+   * @return True if supported, false otherwise.
+   */
+  bool SupportsMediaRename() const
+  {
+    return m_addonCapabilities && m_addonCapabilities->bSupportsMedia &&
+           m_addonCapabilities->bSupportsMediaRename;
+  }
+
+  /*!
+   * @brief Check whether this add-on supports changing lifetime of mediaTag.
+   * @return True if supported, false otherwise.
+   */
+  bool SupportsMediaLifetimeChange() const
+  {
+    return m_addonCapabilities && m_addonCapabilities->bSupportsMedia &&
+           m_addonCapabilities->bSupportsMediaLifetimeChange;
+  }
+
+  /*!
+   * @brief Obtain a list with all possible values for media lifetime.
+   * @param list out, the list with the values or an empty list, if lifetime is not supported.
+   */
+  void GetMediaLifetimeValues(std::vector<std::pair<std::string, int>>& list) const;
+
+  /*!
+   * @brief Check whether this add-on supports retrieving the size media..
+   * @return True if supported, false otherwise.
+   */
+  bool SupportsMediaSize() const
+  {
+    return m_addonCapabilities && m_addonCapabilities->bSupportsMedia &&
+           m_addonCapabilities->bSupportsMediaTagSize;
   }
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -730,6 +830,100 @@ public:
   PVR_ERROR GetTimerTypes(std::vector<std::shared_ptr<CPVRTimerType>>& results) const;
 
   //@}
+  /** @name PVR mediaTag methods */
+  //@{
+
+  /*!
+   * @brief Get the total amount of media from the backend.
+   * @param deleted True to return deleted media.
+   * @param iMedia The total amount of media on the server or -1 on error.
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR GetMediaAmount(bool deleted, int& iMedia);
+
+  /*!
+   * @brief Request the list of all media from the backend.
+   * @param results The container to add the media to.
+   * @param deleted True to return deleted media.
+   * @return PVR_ERROR_NO_ERROR if the list has been fetched successfully.
+   */
+  PVR_ERROR GetMedia(CPVRMedia* results, bool deleted);
+
+  /*!
+   * @brief Delete a mediaTag on the backend.
+   * @param mediaTag The mediaTag to delete.
+   * @return PVR_ERROR_NO_ERROR if the mediaTag has been deleted successfully.
+   */
+  PVR_ERROR DeleteMediaTag(const CPVRMediaTag& mediaTag);
+
+  /*!
+   * @brief Undelete a mediaTag on the backend.
+   * @param mediaTag The mediaTag to undelete.
+   * @return PVR_ERROR_NO_ERROR if the mediaTag has been undeleted successfully.
+   */
+  PVR_ERROR UndeleteMediaTag(const CPVRMediaTag& mediaTag);
+
+  /*!
+   * @brief Delete all media permanent which in the deleted folder on the backend.
+   * @return PVR_ERROR_NO_ERROR if the media has been deleted successfully.
+   */
+  PVR_ERROR DeleteAllMediaFromTrash();
+
+  /*!
+   * @brief Rename a mediaTag on the backend.
+   * @param mediaTag The mediaTag to rename.
+   * @return PVR_ERROR_NO_ERROR if the mediaTag has been renamed successfully.
+   */
+  PVR_ERROR RenameMediaTag(const CPVRMediaTag& mediaTag);
+
+  /*!
+   * @brief Set the lifetime of a mediaTag on the backend.
+   * @param mediaTag The mediaTag to set the lifetime for. mediaTag.m_iLifetime contains the new lifetime value.
+   * @return PVR_ERROR_NO_ERROR if the mediaTag's lifetime has been set successfully.
+   */
+  PVR_ERROR SetMediaTagLifetime(const CPVRMediaTag& mediaTag);
+
+  /*!
+   * @brief Set the play count of a mediaTag on the backend.
+   * @param mediaTag The mediaTag to set the play count.
+   * @param count Play count.
+   * @return PVR_ERROR_NO_ERROR if the mediaTag's play count has been set successfully.
+   */
+  PVR_ERROR SetMediaTagPlayCount(const CPVRMediaTag& mediaTag, int count);
+
+  /*!
+   * @brief Set the last watched position of a mediaTag on the backend.
+   * @param mediaTag The mediaTag.
+   * @param lastplayedposition The last watched position in seconds
+   * @return PVR_ERROR_NO_ERROR if the position has been stored successfully.
+   */
+  PVR_ERROR SetMediaTagLastPlayedPosition(const CPVRMediaTag& mediaTag, int lastplayedposition);
+
+  /*!
+   * @brief Retrieve the last watched position of a mediaTag on the backend.
+   * @param mediaTag The mediaTag.
+   * @param iPosition The last watched position in seconds or -1 on error
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR GetMediaTagLastPlayedPosition(const CPVRMediaTag& mediaTag, int& iPosition);
+
+  /*!
+   * @brief Retrieve the edit decision list (EDL) from the backend.
+   * @param mediaTag The mediaTag.
+   * @param edls The edit decision list (empty on error).
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR GetMediaTagEdl(const CPVRMediaTag& mediaTag, std::vector<PVR_EDL_ENTRY>& edls);
+
+  /*!
+   * @brief Retrieve the size of a mediaTag on the backend.
+   * @param mediaTag The mediaTag.
+   * @param sizeInBytes The size in bytes
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR GetMediaTagSize(const CPVRMediaTag& mediaTag, int64_t& sizeInBytes);
+
+  //@}
   /** @name PVR live stream methods */
   //@{
 
@@ -895,6 +1089,57 @@ public:
                                          CPVRStreamProperties& props);
 
   //@}
+  /** @name PVR mediaTag stream methods */
+  //@{
+
+  /*!
+   * @brief Open a mediaTag on the server.
+   * @param mediaTag The mediaTag to open.
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR OpenMediaStream(const std::shared_ptr<CPVRMediaTag>& mediaTag);
+
+  /*!
+   * @brief Close an open mediaTag stream.
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR CloseMediaStream();
+
+  /*!
+   * @brief Read from an open mediaTag stream.
+   * @param lpBuf The buffer to store the data in.
+   * @param uiBufSize The amount of bytes to read.
+   * @param iRead The amount of bytes that were actually read from the stream.
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR ReadMediaStream(void* lpBuf, int64_t uiBufSize, int& iRead);
+
+  /*!
+   * @brief Seek in a mediaTag stream on a backend.
+   * @param iFilePosition The position to seek to.
+   * @param iWhence ?
+   * @param iPosition The new position or -1 on error.
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR SeekMediaStream(int64_t iFilePosition, int iWhence, int64_t& iPosition);
+
+  /*!
+   * @brief Get the lenght of the currently playing mediaTag stream, if any.
+   * @param iLength The total length of the stream that's currently being read or -1 on error.
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR GetMediaStreamLength(int64_t& iLength);
+
+  /*!
+   * @brief Fill the given container with the properties required for playback of the given mediaTag. Values are obtained from the PVR backend.
+   * @param mediaTag The mediaTag.
+   * @param props The container to be filled with the stream properties.
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR GetMediaTagStreamProperties(const std::shared_ptr<CPVRMediaTag>& mediaTag,
+                                     CPVRStreamProperties& props);
+
+  //@}
   /** @name PVR demultiplexer methods */
   //@{
 
@@ -981,6 +1226,17 @@ public:
                                   bool bDeleted);
 
   /*!
+   * @brief Call one of the mediaTag menu hooks of the client.
+   * @param hook The hook to call.
+   * @param tag The mediaTag associated with the hook to be called.
+   * @param bDeleted True, if the mediaTag is deleted (trashed), false otherwise
+   * @return PVR_ERROR_NO_ERROR on success, respective error code otherwise.
+   */
+  PVR_ERROR CallMediaTagMenuHook(const CPVRClientMenuHook& hook,
+                                 const std::shared_ptr<CPVRMediaTag>& mediaTag,
+                                 bool bDeleted);
+
+  /*!
    * @brief Call one of the timer menu hooks of the client.
    * @param hook The hook to call.
    * @param tag The timer associated with the hook to be called.
@@ -1058,6 +1314,14 @@ private:
    * @param addonTimer The timer on the addon's side.
    */
   static void WriteClientTimerInfo(const CPVRTimerInfoTag& xbmcTimer, PVR_TIMER& addonTimer);
+
+  /*!
+   * @brief Copy over mediaTag info from xbmcMediaTag to addonMediaTag.
+   * @param xbmcMediaTag The mediaTag on XBMC's side.
+   * @param addonMediaTag The mediaTag on the addon's side.
+   */
+  static void WriteClientMediaTagInfo(const CPVRMediaTag& xbmcMediaTag,
+                                      PVR_MEDIA_TAG& addonMediaTag);
 
   /*!
    * @brief Copy over channel info from xbmcChannel to addonClient.
@@ -1179,6 +1443,16 @@ private:
                                           const PVR_RECORDING* entry);
 
   /*!
+   * @brief Transfer a mediaTag entry from the add-on to Kodi
+   * @param kodiInstance Pointer to Kodi's CPVRClient class
+   * @param handle The handle parameter that Kodi used when requesting the mediaTag list
+   * @param entry The entry to transfer to Kodi
+   */
+  static void cb_transfer_media_entry(void* kodiInstance,
+                                      const ADDON_HANDLE handle,
+                                      const PVR_MEDIA_TAG* entry);
+
+  /*!
    * @brief Add or replace a menu hook for the context menu for this add-on
    * @param kodiInstance Pointer to Kodi's CPVRClient class
    * @param hook The hook to add.
@@ -1220,6 +1494,12 @@ private:
    * @param kodiInstance Pointer to Kodi's CPVRClient class
    */
   static void cb_trigger_recording_update(void* kodiInstance);
+
+  /*!
+   * @brief Request Kodi to update it's list of media
+   * @param kodiInstance Pointer to Kodi's CPVRClient class
+   */
+  static void cb_trigger_media_update(void* kodiInstance);
 
   /*!
    * @brief Request Kodi to update it's list of channel groups

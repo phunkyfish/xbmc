@@ -199,6 +199,13 @@
 				<label>19687</label>
 				<visible>Window.IsActive(PVRRecordingInfo)</visible>
 			</control>
+			<control type="button" id="8">
+				<description>Play recording</description>
+				<width>230</width>
+				<include>ButtonInfoDialogsCommonValues</include>
+				<label>19688</label>
+				<visible>Window.IsActive(PVRMediaTagInfo)</visible>
+			</control>
 			<control type="button" id="6">
 				<description>Record</description>
 				<width>230</width>
@@ -211,7 +218,7 @@
 				<width>230</width>
 				<include>ButtonInfoDialogsCommonValues</include>
 				<label>19003</label>
-				<visible>Window.IsActive(PVRGuideInfo) | Window.IsActive(PVRRecordingInfo)</visible>
+				<visible>Window.IsActive(PVRGuideInfo) | Window.IsActive(PVRRecordingInfo) | Window.IsActive(PVRMediaTagInfo)</visible>
 			</control>
 			<control type="button" id="11">
 				<description>Reminders</description>

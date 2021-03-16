@@ -39,6 +39,9 @@ bool CVideoInfo::IsVisible(const CFileItem& item) const
   if (item.IsPVRRecording())
     return false; // pvr recordings have its own implementation for this
 
+  if (item.IsPVRMediaTag())
+    return false; // pvr media have its own implementation for this
+
   return item.GetVideoInfoTag()->m_type == m_mediaType;
 }
 
@@ -65,17 +68,19 @@ bool CRemoveResumePoint::Execute(const CFileItemPtr& item) const
 
 bool CMarkWatched::IsVisible(const CFileItem& item) const
 {
-  if (item.IsDeleted()) // e.g. trashed pvr recording
+  if (item.IsDeleted()) // e.g. trashed pvr recording or mediaTag
     return false;
 
-  if (item.m_bIsFolder) // Only allow video db content, video and recording folders to be updated recursively
+  if (item.m_bIsFolder) // Only allow video db content, video, recording and mediaTag folders to be updated recursively
   {
     if (item.HasVideoInfoTag())
       return item.IsVideoDb();
     else if (item.GetProperty("IsVideoFolder").asBoolean())
       return true;
+    else if (!item.IsParentFolder() && URIUtils::IsPVRRecordingFileOrFolder(item.GetPath()))
+      return true;
     else
-      return !item.IsParentFolder() && URIUtils::IsPVRRecordingFileOrFolder(item.GetPath());
+      return !item.IsParentFolder() && URIUtils::IsPVRMediaTagFileOrFolder(item.GetPath());
   }
   else if (!item.HasVideoInfoTag())
     return false;
@@ -91,17 +96,19 @@ bool CMarkWatched::Execute(const CFileItemPtr& item) const
 
 bool CMarkUnWatched::IsVisible(const CFileItem& item) const
 {
-  if (item.IsDeleted()) // e.g. trashed pvr recording
+  if (item.IsDeleted()) // e.g. trashed pvr recording or mediaTag
     return false;
 
-  if (item.m_bIsFolder) // Only allow video db content, video and recording folders to be updated recursively
+  if (item.m_bIsFolder) // Only allow video db content, video, recording and mediaTag folders to be updated recursively
   {
     if (item.HasVideoInfoTag())
       return item.IsVideoDb();
     else if (item.GetProperty("IsVideoFolder").asBoolean())
       return true;
+    else if (!item.IsParentFolder() && URIUtils::IsPVRRecordingFileOrFolder(item.GetPath()))
+      return true;
     else
-      return !item.IsParentFolder() && URIUtils::IsPVRRecordingFileOrFolder(item.GetPath());
+      return !item.IsParentFolder() && URIUtils::IsPVRMediaTagFileOrFolder(item.GetPath());
   }
   else if (!item.HasVideoInfoTag())
     return false;
@@ -123,7 +130,7 @@ std::string CResume::GetLabel(const CFileItem& item) const
 bool CResume::IsVisible(const CFileItem& itemIn) const
 {
   CFileItem item(itemIn.GetItemToPlay());
-  if (item.IsDeleted()) // e.g. trashed pvr recording
+  if (item.IsDeleted()) // e.g. trashed pvr recording or mediaTag
     return false;
 
   return CGUIWindowVideoBase::HasResumeItemOffset(&item);
@@ -158,6 +165,32 @@ void AddRecordingsToPlayList(const std::shared_ptr<CFileItem>& item, CFileItemLi
   }
 }
 
+void AddMediaToPlayList(const std::shared_ptr<CFileItem>& item, CFileItemList& queuedItems)
+{
+  if (item->m_bIsFolder)
+  {
+    CFileItemList items;
+    XFILE::CDirectory::GetDirectory(item->GetPath(), items, "", XFILE::DIR_FLAG_DEFAULTS);
+
+    const int watchedMode = CMediaSettings::GetInstance().GetWatchedMode("media");
+    const bool unwatchedOnly = watchedMode == WatchedModeUnwatched;
+    const bool watchedOnly = watchedMode == WatchedModeWatched;
+    for (const auto& currItem : items)
+    {
+      if (currItem->HasVideoInfoTag() &&
+          ((unwatchedOnly && currItem->GetVideoInfoTag()->GetPlayCount() > 0) ||
+           (watchedOnly && currItem->GetVideoInfoTag()->GetPlayCount() <= 0)))
+        continue;
+
+      AddMediaToPlayList(currItem, queuedItems);
+    }
+  }
+  else
+  {
+    queuedItems.Add(item);
+  }
+}
+
 void AddRecordingsToPlayListAndSort(const std::shared_ptr<CFileItem>& item,
                                     CFileItemList& queuedItems)
 {
@@ -176,10 +209,49 @@ void AddRecordingsToPlayListAndSort(const std::shared_ptr<CFileItem>& item,
   }
 }
 
+void AddMediaToPlayListAndSort(const std::shared_ptr<CFileItem>& item, CFileItemList& queuedItems)
+{
+  queuedItems.SetPath(item->GetPath());
+  AddMediaToPlayList(item, queuedItems);
+
+  if (!queuedItems.IsEmpty())
+  {
+    const int windowId = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow();
+    if (windowId == WINDOW_TV_MEDIA || windowId == WINDOW_RADIO_MEDIA)
+    {
+      std::unique_ptr<CGUIViewState> viewState(CGUIViewState::GetViewState(windowId, queuedItems));
+      if (viewState)
+        queuedItems.Sort(viewState->GetSortMethod());
+    }
+  }
+}
+
 void QueueRecordings(const std::shared_ptr<CFileItem>& item, bool bPlayNext)
 {
   CFileItemList queuedItems;
   AddRecordingsToPlayListAndSort(item, queuedItems);
+
+  PLAYLIST::CPlayListPlayer& player = CServiceBroker::GetPlaylistPlayer();
+
+  // Determine the proper list to queue this element
+  int playlist = player.GetCurrentPlaylist();
+  if (playlist == PLAYLIST_NONE)
+    playlist = g_application.GetAppPlayer().GetPreferredPlaylist();
+  if (playlist == PLAYLIST_NONE)
+    playlist = PLAYLIST_VIDEO;
+
+  if (bPlayNext && g_application.GetAppPlayer().IsPlaying())
+    player.Insert(playlist, queuedItems, player.GetCurrentSong() + 1);
+  else
+    player.Add(playlist, queuedItems);
+
+  player.SetCurrentPlaylist(playlist);
+}
+
+void QueueMedia(const std::shared_ptr<CFileItem>& item, bool bPlayNext)
+{
+  CFileItemList queuedItems;
+  AddMediaToPlayListAndSort(item, queuedItems);
 
   PLAYLIST::CPlayListPlayer& player = CServiceBroker::GetPlaylistPlayer();
 
@@ -236,6 +308,44 @@ void PlayAndQueueRecordings(const std::shared_ptr<CFileItem>& item, int windowId
   player.Play(itemToPlay, "");
 }
 
+void PlayAndQueueMedia(const std::shared_ptr<CFileItem>& item, int windowId)
+{
+  const std::shared_ptr<CFileItem> parentFolderItem =
+      std::make_shared<CFileItem>(URIUtils::GetParentPath(item->GetPath()), true);
+
+  // add all items of given item's directory to a temporary playlist, start playback of given item
+  CFileItemList queuedItems;
+  AddMediaToPlayListAndSort(parentFolderItem, queuedItems);
+
+  PLAYLIST::CPlayListPlayer& player = CServiceBroker::GetPlaylistPlayer();
+
+  player.ClearPlaylist(PLAYLIST_VIDEO);
+  player.Reset();
+  player.Add(PLAYLIST_VIDEO, queuedItems);
+
+  // figure out where to start playback
+  PLAYLIST::CPlayList& playList = player.GetPlaylist(PLAYLIST_VIDEO);
+  int itemToPlay = 0;
+
+  for (int i = 0; i < queuedItems.Size(); ++i)
+  {
+    if (item->IsSamePath(queuedItems.Get(i).get()))
+    {
+      itemToPlay = i;
+      break;
+    }
+  }
+
+  if (player.IsShuffled(PLAYLIST_VIDEO))
+  {
+    playList.Swap(0, playList.FindOrder(itemToPlay));
+    itemToPlay = 0;
+  }
+
+  player.SetCurrentPlaylist(PLAYLIST_VIDEO);
+  player.Play(itemToPlay, "");
+}
+
 bool IsActiveRecordingsFolder(const CFileItem& item)
 {
   if (item.m_bIsFolder && !item.IsParentFolder() &&
@@ -245,6 +355,20 @@ bool IsActiveRecordingsFolder(const CFileItem& item)
     //       item is only available if one of the recordings windows is active.
     const int windowId = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow();
     return windowId == WINDOW_TV_RECORDINGS || windowId == WINDOW_RADIO_RECORDINGS;
+  }
+
+  return false;
+}
+
+bool IsActiveMediaFolder(const CFileItem& item)
+{
+  if (item.m_bIsFolder && !item.IsParentFolder() &&
+      URIUtils::IsPVRMediaTagFileOrFolder(item.GetPath()))
+  {
+    // Note: Media contained in the folder must be sorted properly, thus this
+    //       item is only available if one of the Media windows is active.
+    const int windowId = CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow();
+    return windowId == WINDOW_TV_MEDIA || windowId == WINDOW_RADIO_MEDIA;
   }
 
   return false;
@@ -268,6 +392,21 @@ void SetPathAndPlay(CFileItem& item)
     // recursively add items to play list
     CFileItemList queuedItems;
     AddRecordingsToPlayListAndSort(std::make_shared<CFileItem>(item), queuedItems);
+
+    PLAYLIST::CPlayListPlayer& player = CServiceBroker::GetPlaylistPlayer();
+
+    player.ClearPlaylist(PLAYLIST_VIDEO);
+    player.Reset();
+    player.Add(PLAYLIST_VIDEO, queuedItems);
+    player.SetCurrentPlaylist(PLAYLIST_VIDEO);
+
+    player.Play();
+  }
+  else if (IsActiveMediaFolder(item))
+  {
+    // recursively add items to play list
+    CFileItemList queuedItems;
+    AddMediaToPlayListAndSort(std::make_shared<CFileItem>(item), queuedItems);
 
     PLAYLIST::CPlayListPlayer& player = CServiceBroker::GetPlaylistPlayer();
 
@@ -312,10 +451,13 @@ std::string CPlay::GetLabel(const CFileItem& itemIn) const
 bool CPlay::IsVisible(const CFileItem& itemIn) const
 {
   CFileItem item(itemIn.GetItemToPlay());
-  if (item.IsDeleted()) // e.g. trashed pvr recording
+  if (item.IsDeleted()) // e.g. trashed pvr recording or mediaTag
     return false;
 
   if (IsActiveRecordingsFolder(item))
+    return true;
+
+  if (IsActiveMediaFolder(item))
     return true;
 
   // Music nav window has own "Play" context menu button, do not show this one. Playlist files
@@ -349,6 +491,9 @@ bool CQueue::IsVisible(const CFileItem& item) const
   if (item.IsUsablePVRRecording() || IsActiveRecordingsFolder(item))
     return true;
 
+  if (item.IsUsablePVRMediaTag() || IsActiveMediaFolder(item))
+    return true;
+
   return false; //! @todo implement
 }
 
@@ -364,6 +509,13 @@ bool CQueue::Execute(const CFileItemPtr& item) const
     return true;
   }
 
+  if (item->IsUsablePVRMediaTag() || IsActiveMediaFolder(*item))
+  {
+    // recursively add items to play list
+    QueueMedia(item, false);
+    return true;
+  }
+
   return true; //! @todo implement
 };
 
@@ -372,7 +524,7 @@ bool CPlayNext::IsVisible(const CFileItem& item) const
   if (CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow() == WINDOW_VIDEO_PLAYLIST)
     return false; // Already queued
 
-  if (item.IsUsablePVRRecording() || IsActiveRecordingsFolder(item))
+  if (item.IsUsablePVRMediaTag() || IsActiveMediaFolder(item))
     return true;
 
   return false; //! @todo implement
@@ -390,6 +542,13 @@ bool CPlayNext::Execute(const CFileItemPtr& item) const
     return true;
   }
 
+  if (item->IsUsablePVRMediaTag() || IsActiveMediaFolder(*item))
+  {
+    // recursively add items to play list
+    QueueMedia(item, true);
+    return true;
+  }
+
   return true; //! @todo implement
 };
 
@@ -401,6 +560,9 @@ bool CPlayAndQueue::IsVisible(const CFileItem& item) const
 
   if ((windowId == WINDOW_TV_RECORDINGS || windowId == WINDOW_RADIO_RECORDINGS) &&
       item.IsUsablePVRRecording())
+    return true;
+
+  if ((windowId == WINDOW_TV_MEDIA || windowId == WINDOW_RADIO_MEDIA) && item.IsUsablePVRMediaTag())
     return true;
 
   return false; //! @todo implement
@@ -417,6 +579,14 @@ bool CPlayAndQueue::Execute(const CFileItemPtr& item) const
   {
     // recursively add items located in the same folder as item to play list, starting with item
     PlayAndQueueRecordings(item, windowId);
+    return true;
+  }
+
+  if ((windowId == WINDOW_TV_MEDIA || windowId == WINDOW_RADIO_MEDIA) &&
+      item->IsUsablePVRMediaTag())
+  {
+    // recursively add items located in the same folder as item to play list, starting with item
+    PlayAndQueueMedia(item, windowId);
     return true;
   }
 

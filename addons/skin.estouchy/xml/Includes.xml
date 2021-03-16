@@ -1578,21 +1578,21 @@
 			<description>Watched button</description>
 			<include>MenuButtonCommonValues</include>
 			<label>20367</label>
-			<visible>Window.IsActive(MyPVRRecordings.xml)</visible>
+			<visible>Window.IsActive(MyPVRRecordings.xml) | Window.IsActive(MyPVRMedia.xml)</visible>
 		</control>
 		<control type="radiobutton" id="5">
 			<description>Group items Toggle</description>
 			<textwidth>240</textwidth>
 			<include>MenuButtonCommonValues</include>
 			<label>19270</label>
-			<visible>Window.IsActive(MyPVRRecordings.xml)</visible>
+			<visible>Window.IsActive(MyPVRRecordings.xml) | Window.IsActive(MyPVRMedia.xml)</visible>
 		</control>
 		<control type="radiobutton" id="7">
 			<description>Deleted items Toggle</description>
 			<textwidth>240</textwidth>
 			<include>MenuButtonCommonValues</include>
 			<label>19184</label>
-			<visible>Window.IsActive(MyPVRRecordings.xml)</visible>
+			<visible>Window.IsActive(MyPVRRecordings.xml) | Window.IsActive(MyPVRMedia.xml)</visible>
 		</control>
 		<control type="radiobutton" id="8">
 			<description>Hide disabled items Toggle</description>

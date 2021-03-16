@@ -478,7 +478,8 @@ std::vector<CVariant> CPVRClients::GetEnabledClientInfos() const
       clientInfo["supportstimers"] = capabilities.SupportsTimers();
       clientInfo["supportschannelgroups"] = capabilities.SupportsChannelGroups();
       clientInfo["supportschannelscan"] = capabilities.SupportsChannelScan();
-      clientInfo["supportchannelproviders"] = capabilities.SupportsProviders();
+      clientInfo["supportproviders"] = capabilities.SupportsProviders();
+      clientInfo["supportsmedia"] = capabilities.SupportsMedia();
 
       clientInfos.push_back(clientInfo);
     }
@@ -517,6 +518,10 @@ std::vector<SBackend> CPVRClients::GetBackendProperties() const
       properties.numRecordings = iAmount;
     if (client->GetRecordingsAmount(true, iAmount) == PVR_ERROR_NO_ERROR)
       properties.numDeletedRecordings = iAmount;
+    if (client->GetMediaAmount(false, iAmount) == PVR_ERROR_NO_ERROR)
+      properties.numMedia = iAmount;
+    if (client->GetMediaAmount(true, iAmount) == PVR_ERROR_NO_ERROR)
+      properties.numDeletedMedia = iAmount;
     properties.name = client->GetBackendName();
     properties.version = client->GetBackendVersion();
     properties.host = client->GetConnectionString();
@@ -562,6 +567,23 @@ PVR_ERROR CPVRClients::DeleteAllRecordingsFromTrash()
 {
   return ForCreatedClients(__FUNCTION__, [](const std::shared_ptr<CPVRClient>& client) {
     return client->DeleteAllRecordingsFromTrash();
+  });
+}
+
+PVR_ERROR CPVRClients::GetMedia(CPVRMedia* mediaTags, bool deleted, std::vector<int>& failedClients)
+{
+  return ForCreatedClients(
+      __FUNCTION__,
+      [mediaTags, deleted](const std::shared_ptr<CPVRClient>& client) {
+        return client->GetMedia(mediaTags, deleted);
+      },
+      failedClients);
+}
+
+PVR_ERROR CPVRClients::DeleteAllMediaFromTrash()
+{
+  return ForCreatedClients(__FUNCTION__, [](const std::shared_ptr<CPVRClient>& client) {
+    return client->DeleteAllMediaFromTrash();
   });
 }
 
@@ -643,6 +665,18 @@ bool CPVRClients::AnyClientSupportingRecordingsSize() const
   return recordingSizeClients.size() != 0;
 }
 
+bool CPVRClients::AnyClientSupportingMediaSize() const
+{
+  std::vector<std::shared_ptr<CPVRClient>> mediaTagSizeClients;
+  ForCreatedClients(__FUNCTION__,
+                    [&mediaTagSizeClients](const std::shared_ptr<CPVRClient>& client) {
+                      if (client->GetClientCapabilities().SupportsMediaSize())
+                        mediaTagSizeClients.emplace_back(client);
+                      return PVR_ERROR_NO_ERROR;
+                    });
+  return mediaTagSizeClients.size() != 0;
+}
+
 bool CPVRClients::AnyClientSupportingEPG() const
 {
   bool bHaveSupportingClient = false;
@@ -661,6 +695,18 @@ bool CPVRClients::AnyClientSupportingRecordings() const
   ForCreatedClients(__FUNCTION__,
                     [&bHaveSupportingClient](const std::shared_ptr<CPVRClient>& client) {
                       if (client->GetClientCapabilities().SupportsRecordings())
+                        bHaveSupportingClient = true;
+                      return PVR_ERROR_NO_ERROR;
+                    });
+  return bHaveSupportingClient;
+}
+
+bool CPVRClients::AnyClientSupportingMedia() const
+{
+  bool bHaveSupportingClient = false;
+  ForCreatedClients(__FUNCTION__,
+                    [&bHaveSupportingClient](const std::shared_ptr<CPVRClient>& client) {
+                      if (client->GetClientCapabilities().SupportsMedia())
                         bHaveSupportingClient = true;
                       return PVR_ERROR_NO_ERROR;
                     });

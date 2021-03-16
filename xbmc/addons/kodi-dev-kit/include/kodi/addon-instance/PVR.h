@@ -14,6 +14,7 @@
 #include "pvr/EDL.h"
 #include "pvr/EPG.h"
 #include "pvr/General.h"
+#include "pvr/Media.h"
 #include "pvr/MenuHook.h"
 #include "pvr/Providers.h"
 #include "pvr/Recordings.h"
@@ -154,7 +155,16 @@ namespace addon
 //------------------------------------------------------------------------------
 
 //##############################################################################
-/// @defgroup cpp_kodi_addon_pvr_Defs_Menuhook 7. Menuhook
+/// @defgroup cpp_kodi_addon_pvr_Defs_MediaTag 7. MediaTag
+/// @ingroup cpp_kodi_addon_pvr_Defs
+/// @brief **Representation of a recording**\n
+/// Used to exchange the available recording data between Kodi and addon on
+/// @ref cpp_kodi_addon_pvr_Media "Media methods in PVR instance class".
+///
+//------------------------------------------------------------------------------
+
+//##############################################################################
+/// @defgroup cpp_kodi_addon_pvr_Defs_Menuhook 8. Menuhook
 /// @ingroup cpp_kodi_addon_pvr_Defs
 /// @brief **PVR Context menu data**\n
 /// Define data for the context menus available to the user
@@ -162,7 +172,7 @@ namespace addon
 //------------------------------------------------------------------------------
 
 //##############################################################################
-/// @defgroup cpp_kodi_addon_pvr_Defs_EDLEntry 8. Edit decision list (EDL)
+/// @defgroup cpp_kodi_addon_pvr_Defs_EDLEntry 9. Edit decision list (EDL)
 /// @ingroup cpp_kodi_addon_pvr_Defs
 /// @brief **An edit decision list or EDL is used in the post-production process
 /// of film editing and video editing**\n
@@ -172,7 +182,7 @@ namespace addon
 //------------------------------------------------------------------------------
 
 //##############################################################################
-/// @defgroup cpp_kodi_addon_pvr_Defs_Stream 9. Inputstream
+/// @defgroup cpp_kodi_addon_pvr_Defs_Stream 10. Inputstream
 /// @ingroup cpp_kodi_addon_pvr_Defs
 /// @brief **Inputstream**\n
 /// This includes classes and values that are used in the PVR inputstream.
@@ -2236,7 +2246,333 @@ public:
   //--==----==----==----==----==----==----==----==----==----==----==----==----==
 
   //============================================================================
-  /// @defgroup cpp_kodi_addon_pvr_PowerManagement 7. Power management events (optional)
+  /// @defgroup cpp_kodi_addon_pvr_Media 7. Media (optional)
+  /// @ingroup cpp_kodi_addon_pvr
+  /// @brief **PVR mediaTag methods**\n
+  /// To transfer available media of the PVR backend and to allow possible
+  /// playback.
+  ///
+  /// @remarks Only used by Kodi if @ref PVRCapabilities::SetSupportsMedia "supportsMedia"
+  /// is set to true.\n\n
+  /// If a media changes after the initial import, or if a new one was added,
+  /// then the add-on should call @ref TriggerMediaUpdate().
+  ///
+  ///
+  ///---------------------------------------------------------------------------
+  ///
+  /// **Media parts in interface:**\n
+  /// Copy this to your project and extend with your parts or leave functions
+  /// complete away where not used or supported.
+  ///
+  /// @copydetails cpp_kodi_addon_pvr_Media_header_addon_auto_check
+  /// @copydetails cpp_kodi_addon_pvr_Media_source_addon_auto_check
+  ///
+  ///@{
+
+  //============================================================================
+  /// @brief To get amount of mediaTag present on backend
+  ///
+  /// @param[in] deleted if set return deleted mediaTag (called if
+  ///                    @ref PVRCapabilities::SetSupportsMediaUndelete "supportsMediaUndelete"
+  ///                    set to true)
+  /// @param[out] amount The total amount of media on the backend
+  /// @return @ref PVR_ERROR_NO_ERROR if the amount has been fetched successfully.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMedia "supportsMedia" is set to true.
+  ///
+  virtual PVR_ERROR GetMediaAmount(bool deleted, int& amount) { return PVR_ERROR_NOT_IMPLEMENTED; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Request the list of all media from the backend, if supported.
+  ///
+  /// MediaTag entries are added to Kodi by calling TransferMediaTagEntry() on the callback.
+  ///
+  /// @param[in] deleted if set return deleted mediaTag (called if
+  ///                    @ref PVRCapabilities::SetSupportsMediaUndelete "supportsMediaUndelete"
+  ///                    set to true)
+  /// @param[out] results List of available media with @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag
+  ///                     becomes transferred with @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaResultSet
+  ///                     and given to Kodi
+  /// @return @ref PVR_ERROR_NO_ERROR if the media have been fetched successfully.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMedia "supportsMedia"
+  /// is set to true.
+  ///
+  /// --------------------------------------------------------------------------
+  ///
+  /// @copydetails cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag_Help
+  ///
+  ///
+  ///---------------------------------------------------------------------------
+  ///
+  /// **Example:**
+  /// ~~~~~~~~~~~~~{.cpp}
+  /// ...
+  /// PVR_ERROR CMyPVRInstance::GetMedia(bool deleted, kodi::addon::PVRMediaResultSet& results)
+  /// {
+  ///   // Minimal demo example, in reality bigger and loop to transfer all
+  ///   kodi::addon::PVRMediaTag mediaTag;
+  ///   mediaTag.SetMediaTagId(123);
+  ///   mediaTag.SetTitle("My mediaTag name");
+  ///   ...
+  ///
+  ///   // Give it now to Kodi
+  ///   results.Add(mediaTag);
+  ///   return PVR_ERROR_NO_ERROR;
+  /// }
+  /// ...
+  /// ~~~~~~~~~~~~~
+  ///
+  virtual PVR_ERROR GetMedia(bool deleted, kodi::addon::PVRMediaResultSet& results)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Delete a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag to delete.
+  /// @return @ref PVR_ERROR_NO_ERROR if the mediaTag has been deleted successfully.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMedia "supportsMedia"
+  /// is set to true.
+  ///
+  virtual PVR_ERROR DeleteMediaTag(const kodi::addon::PVRMediaTag& mediaTag)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Undelete a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag to undelete.
+  /// @return @ref PVR_ERROR_NO_ERROR if the mediaTag has been undeleted successfully.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMediaUndelete "supportsMediaUndelete"
+  /// is set to true.
+  ///
+  virtual PVR_ERROR UndeleteMediaTag(const kodi::addon::PVRMediaTag& mediaTag)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief  Delete all media permanent which in the deleted folder on the backend.
+  ///
+  /// @return @ref PVR_ERROR_NO_ERROR if the media has been deleted successfully.
+  ///
+  virtual PVR_ERROR DeleteAllMediaFromTrash() { return PVR_ERROR_NOT_IMPLEMENTED; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Rename a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag
+  ///                      to rename, containing the new name.
+  /// @return @ref PVR_ERROR_NO_ERROR if the mediaTag has been renamed successfully.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMedia "supportsMedia"
+  /// is set to true.
+  ///
+  virtual PVR_ERROR RenameMediaTag(const kodi::addon::PVRMediaTag& mediaTag)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Set the lifetime of a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag
+  ///                      to change the lifetime for. mediaTag.iLifetime
+  ///                      contains the new lieftime value.
+  /// @return @ref PVR_ERROR_NO_ERROR if the mediaTag's lifetime has been set
+  ///         successfully.
+  ///
+  /// @remarks Required if @ref PVRCapabilities::SetSupportsMediaLifetimeChange "supportsMediaLifetimeChange"
+  /// is set to true.
+  ///
+  virtual PVR_ERROR SetMediaTagLifetime(const kodi::addon::PVRMediaTag& mediaTag)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Set the play count of a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag
+  ///                      to change the play count.
+  /// @param[in] count Play count.
+  /// @return @ref PVR_ERROR_NO_ERROR if the mediaTag's play count has been set
+  /// successfully.
+  ///
+  /// @remarks Required if @ref PVRCapabilities::SetSupportsMediaTagPlayCount "supportsMediaTagPlayCount"
+  /// is set to true.
+  ///
+  virtual PVR_ERROR SetMediaTagPlayCount(const kodi::addon::PVRMediaTag& mediaTag, int count)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Set the last watched position of a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag.
+  /// @param[in] lastplayedposition The last watched position in seconds
+  /// @return @ref PVR_ERROR_NO_ERROR if the position has been stored successfully.
+  ///
+  /// @remarks Required if @ref PVRCapabilities::SetSupportsLastPlayedPosition "supportsLastPlayedPosition"
+  /// is set to true.
+  ///
+  virtual PVR_ERROR SetMediaTagLastPlayedPosition(const kodi::addon::PVRMediaTag& mediaTag,
+                                                  int lastplayedposition)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Retrieve the last watched position of a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag.
+  /// @param[out] position The last watched position in seconds
+  /// @return @ref PVR_ERROR_NO_ERROR if the amount has been fetched successfully.
+  ///
+  /// @remarks Required if @ref PVRCapabilities::SetSupportsMediaTagPlayCount "supportsMediaTagPlayCount"
+  /// is set to true.
+  ///
+  virtual PVR_ERROR GetMediaTagLastPlayedPosition(const kodi::addon::PVRMediaTag& mediaTag,
+                                                  int& position)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Retrieve the edit decision list (EDL) of a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag.
+  /// @param[out] edl The function has to write the EDL into this array.
+  /// @return @ref PVR_ERROR_NO_ERROR if the EDL was successfully read or no EDL exists.
+  ///
+  /// @remarks Required if @ref PVRCapabilities::SetSupportsMediaTagEdl "supportsMediaTagEdl"
+  /// is set to true.
+  ///
+  /// --------------------------------------------------------------------------
+  ///
+  /// @copydetails cpp_kodi_addon_pvr_Defs_EDLEntry_PVREDLEntry_Help
+  ///
+  virtual PVR_ERROR GetMediaTagEdl(const kodi::addon::PVRMediaTag& mediaTag,
+                                   std::vector<kodi::addon::PVREDLEntry>& edl)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Retrieve the size of a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The mediaTag to get the size in bytes for.
+  /// @param[out] size The size in bytes of the mediaTag
+  /// @return @ref PVR_ERROR_NO_ERROR if the mediaTag's size has been set successfully.
+  ///
+  /// @remarks Required if @ref PVRCapabilities::SetSupportsMediaTagSize "supportsMediaTagSize"
+  /// is set to true.
+  ///
+  virtual PVR_ERROR GetMediaTagSize(const kodi::addon::PVRMediaTag& mediaTag, int64_t& size)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Get the stream properties for a mediaTag from the backend.
+  ///
+  /// @param[in] mediaTag The @ref cpp_kodi_addon_pvr_Defs_MediaTag_PVRMediaTag
+  ///                      to get the stream properties for.
+  /// @param[out] properties The properties required to play the stream.
+  /// @return @ref PVR_ERROR_NO_ERROR if the stream is available.
+  ///
+  /// @remarks Required if @ref PVRCapabilities::SetSupportsMedia "supportsMedia"
+  /// is set to true and the add-on does not implement mediaTag stream functions
+  /// (@ref OpenMediaStream, ...).\n
+  /// In this case your implementation must fill the property @ref PVR_STREAM_PROPERTY_STREAMURL
+  /// with the URL Kodi should resolve to playback the mediaTag.
+  ///
+  /// @note The value directly related to inputstream must always begin with the
+  /// name of the associated add-on, e.g. <b>`"inputstream.adaptive.manifest_update_parameter"`</b>.
+  ///
+  ///
+  ///---------------------------------------------------------------------------
+  ///
+  /// **Example:**
+  /// ~~~~~~~~~~~~~{.cpp}
+  /// ...
+  /// PVR_ERROR CMyPVRInstance::GetMediaTagStreamProperties(const kodi::addon::PVRMediaTag& mediaTag,
+  ///                                                        std::vector<kodi::addon::PVRStreamProperty>& properties)
+  /// {
+  ///   ...
+  ///   properties.emplace_back(PVR_STREAM_PROPERTY_INPUTSTREAM, "inputstream.adaptive");
+  ///   properties.emplace_back("inputstream.adaptive.manifest_type", "mpd");
+  ///   properties.emplace_back("inputstream.adaptive.manifest_update_parameter", "full");
+  ///   properties.emplace_back(PVR_STREAM_PROPERTY_MIMETYPE, "application/xml+dash");
+  ///   return PVR_ERROR_NO_ERROR;
+  /// }
+  /// ...
+  /// ~~~~~~~~~~~~~
+  ///
+  virtual PVR_ERROR GetMediaTagStreamProperties(
+      const kodi::addon::PVRMediaTag& mediaTag,
+      std::vector<kodi::addon::PVRStreamProperty>& properties)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //==========================================================================
+  /// @brief Call one of the mediaTag related menu hooks (if supported).
+  ///
+  /// Supported @ref cpp_kodi_addon_pvr_Defs_Menuhook_PVRMenuhook instances have to be added in
+  /// `constructor()`, by calling @ref AddMenuHook() on the callback.
+  ///
+  /// @param[in] menuhook The hook to call.
+  /// @param[in] item The selected mediaTag item for which the hook was called.
+  /// @return @ref PVR_ERROR_NO_ERROR if the hook was called successfully.
+  ///
+  /// --------------------------------------------------------------------------
+  ///
+  /// @copydetails cpp_kodi_addon_pvr_Defs_Menuhook_PVRMenuhook_Help
+  ///
+  virtual PVR_ERROR CallMediaTagMenuHook(const kodi::addon::PVRMenuhook& menuhook,
+                                         const kodi::addon::PVRMediaTag& item)
+  {
+    return PVR_ERROR_NOT_IMPLEMENTED;
+  }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief **Callback to Kodi Function**\n
+  /// Request Kodi to update it's list of media.
+  ///
+  /// @remarks Only called from addon itself
+  ///
+  inline void TriggerMediaUpdate()
+  {
+    m_instanceData->toKodi->TriggerMediaUpdate(m_instanceData->toKodi->kodiInstance);
+  }
+  //----------------------------------------------------------------------------
+
+  ///@}
+  //--==----==----==----==----==----==----==----==----==----==----==----==----==
+
+  //============================================================================
+  /// @defgroup cpp_kodi_addon_pvr_PowerManagement 8. Power management events (optional)
   /// @ingroup cpp_kodi_addon_pvr
   /// @brief **Used to notify the pvr addon for power management events**\n
   /// Used to allow any energy savings.
@@ -2289,7 +2625,7 @@ public:
   //--==----==----==----==----==----==----==----==----==----==----==----==----==
 
   //============================================================================
-  /// @defgroup cpp_kodi_addon_pvr_Streams 8. Inputstream
+  /// @defgroup cpp_kodi_addon_pvr_Streams 9. Inputstream
   /// @ingroup cpp_kodi_addon_pvr
   /// @brief **PVR Inputstream**\n
   /// This includes functions that are used in the PVR inputstream.
@@ -2302,7 +2638,7 @@ public:
   ///@{
 
   //============================================================================
-  /// @defgroup cpp_kodi_addon_pvr_Streams_TV 8.1. TV stream
+  /// @defgroup cpp_kodi_addon_pvr_Streams_TV 9.1. TV stream
   /// @ingroup cpp_kodi_addon_pvr_Streams
   /// @brief **PVR TV stream**\n
   /// Stream processing regarding live TV.
@@ -2394,7 +2730,7 @@ public:
   //----------------------------------------------------------------------------
 
   //============================================================================
-  /// @defgroup cpp_kodi_addon_pvr_Streams_TV_Demux 8.1.1. Stream demuxing
+  /// @defgroup cpp_kodi_addon_pvr_Streams_TV_Demux 9.1.1. Stream demuxing
   /// @ingroup cpp_kodi_addon_pvr_Streams_TV
   /// @brief **PVR stream demuxing**\n
   /// Read TV streams with own demux within addon.
@@ -2557,7 +2893,7 @@ public:
   //--==----==----==----==----==----==----==----==----==----==----==----==----==
 
   //============================================================================
-  /// @defgroup cpp_kodi_addon_pvr_Streams_Recording 8.2. Recording stream
+  /// @defgroup cpp_kodi_addon_pvr_Streams_Recording 9.2. Recording stream
   /// @ingroup cpp_kodi_addon_pvr_Streams
   /// @brief **PVR Recording stream**\n
   /// Stream processing regarding recordings.
@@ -2646,7 +2982,96 @@ public:
   //--==----==----==----==----==----==----==----==----==----==----==----==----==
 
   //============================================================================
-  /// @defgroup cpp_kodi_addon_pvr_Streams_Various 8.3. Various functions
+  /// @defgroup cpp_kodi_addon_pvr_Streams_MediaTag 9.3. MediaTag stream
+  /// @ingroup cpp_kodi_addon_pvr_Streams
+  /// @brief **PVR MediaTag stream**\n
+  /// Stream processing regarding media.
+  ///
+  /// @note Demuxing is not possible with the media.
+  ///
+  ///
+  ///---------------------------------------------------------------------------
+  ///
+  /// **MediaTag stream parts in interface:**\n
+  /// Copy this to your project and extend with your parts or leave functions
+  /// complete away where not used or supported.
+  ///
+  /// @copydetails cpp_kodi_addon_pvr_Streams_MediaTag_header_addon_auto_check
+  /// @copydetails cpp_kodi_addon_pvr_Streams_MediaTag_source_addon_auto_check
+  ///
+  ///@{
+
+  //============================================================================
+  /// @brief Open a stream to a mediaTag on the backend.
+  ///
+  /// @param[in] mediaTag The mediaTag to open.
+  /// @return True if the stream has been opened successfully, false otherwise.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMedia()
+  /// is set to true. @ref CloseMediaStream() will always be called by Kodi
+  /// prior to calling this function.
+  ///
+  virtual bool OpenMediaStream(const kodi::addon::PVRMediaTag& mediaTag) { return false; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Close an open stream from a mediaTag.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMedia()
+  /// is set to true.
+  ///
+  virtual void CloseMediaStream() {}
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Read from a mediaTag.
+  ///
+  /// @param[in] buffer The buffer to store the data in.
+  /// @param[in] size The amount of bytes to read.
+  /// @return The amount of bytes that were actually read from the stream.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMedia()
+  /// is set to true.
+  ///
+  virtual int ReadMediaStream(unsigned char* buffer, unsigned int size) { return 0; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Seek in a recorded stream.
+  ///
+  /// @param[in] position The position to seek to.
+  /// @param[in] whence [optional] offset relative to
+  ///                   You can set the value of whence to one of three things:
+  /// |   Value | int | Description |
+  /// |:--------:|:---:|:----------------------------------------------------|
+  /// | SEEK_SET |  0 | position is relative to the beginning of the file. This is probably what you had in mind anyway, and is the most commonly used value for whence.
+  /// | SEEK_CUR |  1 | position is relative to the current file pointer position. So, in effect, you can say, "Move to my current position plus 30 bytes," or, "move to my current position minus 20 bytes."
+  /// | SEEK_END |  2 | position is relative to the end of the file. Just like SEEK_SET except from the other end of the file. Be sure to use negative values for offset if you want to back up from the end of the file, instead of going past the end into oblivion.
+  ///
+  /// @return The new position.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMedia()
+  /// is set to true.
+  ///
+  virtual int64_t SeekMediaStream(int64_t position, int whence) { return 0; }
+  //----------------------------------------------------------------------------
+
+  //============================================================================
+  /// @brief Obtain the length of a recorded stream.
+  ///
+  /// @return The total length of the stream that's currently being read.
+  ///
+  /// @remarks Optional, and only used if @ref PVRCapabilities::SetSupportsMedia()
+  /// is true (=> @ref ReadMediaStream).
+  ///
+  virtual int64_t LengthMediaStream() { return 0; }
+  //----------------------------------------------------------------------------
+
+  ///@}
+  //--==----==----==----==----==----==----==----==----==----==----==----==----==
+
+  //============================================================================
+  /// @defgroup cpp_kodi_addon_pvr_Streams_Various 9.4. Various functions
   /// @ingroup cpp_kodi_addon_pvr_Streams
   /// @brief **Various other PVR stream related functions**\n
   /// These apply to all other groups in inputstream and are therefore declared
@@ -2810,6 +3235,21 @@ private:
     m_instanceData->toAddon->UpdateTimer = ADDON_UpdateTimer;
     m_instanceData->toAddon->CallTimerMenuHook = ADDON_CallTimerMenuHook;
     //--==----==----==----==----==----==----==----==----==----==----==----==----==
+    m_instanceData->toAddon->GetMediaAmount = ADDON_GetMediaAmount;
+    m_instanceData->toAddon->GetMedia = ADDON_GetMedia;
+    m_instanceData->toAddon->DeleteMediaTag = ADDON_DeleteMediaTag;
+    m_instanceData->toAddon->UndeleteMediaTag = ADDON_UndeleteMediaTag;
+    m_instanceData->toAddon->DeleteAllMediaFromTrash = ADDON_DeleteAllMediaFromTrash;
+    m_instanceData->toAddon->RenameMediaTag = ADDON_RenameMediaTag;
+    m_instanceData->toAddon->SetMediaTagLifetime = ADDON_SetMediaTagLifetime;
+    m_instanceData->toAddon->SetMediaTagPlayCount = ADDON_SetMediaTagPlayCount;
+    m_instanceData->toAddon->SetMediaTagLastPlayedPosition = ADDON_SetMediaTagLastPlayedPosition;
+    m_instanceData->toAddon->GetMediaTagLastPlayedPosition = ADDON_GetMediaTagLastPlayedPosition;
+    m_instanceData->toAddon->GetMediaTagEdl = ADDON_GetMediaTagEdl;
+    m_instanceData->toAddon->GetMediaTagSize = ADDON_GetMediaTagSize;
+    m_instanceData->toAddon->GetMediaTagStreamProperties = ADDON_GetMediaTagStreamProperties;
+    m_instanceData->toAddon->CallMediaTagMenuHook = ADDON_CallMediaTagMenuHook;
+    //--==----==----==----==----==----==----==----==----==----==----==----==----==
     m_instanceData->toAddon->OnSystemSleep = ADDON_OnSystemSleep;
     m_instanceData->toAddon->OnSystemWake = ADDON_OnSystemWake;
     m_instanceData->toAddon->OnPowerSavingActivated = ADDON_OnPowerSavingActivated;
@@ -2829,6 +3269,12 @@ private:
     m_instanceData->toAddon->ReadRecordedStream = ADDON_ReadRecordedStream;
     m_instanceData->toAddon->SeekRecordedStream = ADDON_SeekRecordedStream;
     m_instanceData->toAddon->LengthRecordedStream = ADDON_LengthRecordedStream;
+    //--==----==----==----==----==----==----==----==----==----==----==----==----==
+    m_instanceData->toAddon->OpenMediaStream = ADDON_OpenMediaStream;
+    m_instanceData->toAddon->CloseMediaStream = ADDON_CloseMediaStream;
+    m_instanceData->toAddon->ReadMediaStream = ADDON_ReadMediaStream;
+    m_instanceData->toAddon->SeekMediaStream = ADDON_SeekMediaStream;
+    m_instanceData->toAddon->LengthMediaStream = ADDON_LengthMediaStream;
     //--==----==----==----==----==----==----==----==----==----==----==----==----==
     m_instanceData->toAddon->DemuxReset = ADDON_DemuxReset;
     m_instanceData->toAddon->DemuxAbort = ADDON_DemuxAbort;
@@ -3358,6 +3804,145 @@ private:
 
   //--==----==----==----==----==----==----==----==----==----==----==----==----==
 
+  inline static PVR_ERROR ADDON_GetMediaAmount(const AddonInstance_PVR* instance,
+                                                    bool deleted,
+                                                    int* amount)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->GetMediaAmount(deleted, *amount);
+  }
+
+  inline static PVR_ERROR ADDON_GetMedia(const AddonInstance_PVR* instance,
+                                              ADDON_HANDLE handle,
+                                              bool deleted)
+  {
+    PVRMediaResultSet result(instance, handle);
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->GetMedia(deleted, result);
+  }
+
+  inline static PVR_ERROR ADDON_DeleteMediaTag(const AddonInstance_PVR* instance,
+                                                const PVR_MEDIA_TAG* mediaTag)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->DeleteMediaTag(mediaTag);
+  }
+
+  inline static PVR_ERROR ADDON_UndeleteMediaTag(const AddonInstance_PVR* instance,
+                                                  const PVR_MEDIA_TAG* mediaTag)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->UndeleteMediaTag(mediaTag);
+  }
+
+  inline static PVR_ERROR ADDON_DeleteAllMediaFromTrash(const AddonInstance_PVR* instance)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->DeleteAllMediaFromTrash();
+  }
+
+  inline static PVR_ERROR ADDON_RenameMediaTag(const AddonInstance_PVR* instance,
+                                                const PVR_MEDIA_TAG* mediaTag)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->RenameMediaTag(mediaTag);
+  }
+
+  inline static PVR_ERROR ADDON_SetMediaTagLifetime(const AddonInstance_PVR* instance,
+                                                     const PVR_MEDIA_TAG* mediaTag)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->SetMediaTagLifetime(mediaTag);
+  }
+
+  inline static PVR_ERROR ADDON_SetMediaTagPlayCount(const AddonInstance_PVR* instance,
+                                                      const PVR_MEDIA_TAG* mediaTag,
+                                                      int count)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->SetMediaTagPlayCount(mediaTag, count);
+  }
+
+  inline static PVR_ERROR ADDON_SetMediaTagLastPlayedPosition(const AddonInstance_PVR* instance,
+                                                               const PVR_MEDIA_TAG* mediaTag,
+                                                               int lastplayedposition)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->SetMediaTagLastPlayedPosition(mediaTag, lastplayedposition);
+  }
+
+  inline static PVR_ERROR ADDON_GetMediaTagLastPlayedPosition(const AddonInstance_PVR* instance,
+                                                               const PVR_MEDIA_TAG* mediaTag,
+                                                               int* position)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->GetMediaTagLastPlayedPosition(mediaTag, *position);
+  }
+
+  inline static PVR_ERROR ADDON_GetMediaTagEdl(const AddonInstance_PVR* instance,
+                                                const PVR_MEDIA_TAG* mediaTag,
+                                                PVR_EDL_ENTRY* edl,
+                                                int* size)
+  {
+    *size = 0;
+    std::vector<PVREDLEntry> edlList;
+    PVR_ERROR error = static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+                          ->GetMediaTagEdl(mediaTag, edlList);
+    if (error == PVR_ERROR_NO_ERROR)
+    {
+      for (const auto& edlEntry : edlList)
+      {
+        edl[*size] = *edlEntry;
+        ++*size;
+      }
+    }
+    return error;
+  }
+
+  inline static PVR_ERROR ADDON_GetMediaTagSize(const AddonInstance_PVR* instance,
+                                                 const PVR_MEDIA_TAG* mediaTag,
+                                                 int64_t* size)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->GetMediaTagSize(mediaTag, *size);
+  }
+
+  inline static PVR_ERROR ADDON_GetMediaTagStreamProperties(const AddonInstance_PVR* instance,
+                                                             const PVR_MEDIA_TAG* mediaTag,
+                                                             PVR_NAMED_VALUE* properties,
+                                                             unsigned int* propertiesCount)
+  {
+    *propertiesCount = 0;
+    std::vector<PVRStreamProperty> propertiesList;
+    PVR_ERROR error = static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+                          ->GetMediaTagStreamProperties(mediaTag, propertiesList);
+    if (error == PVR_ERROR_NO_ERROR)
+    {
+      for (const auto& property : propertiesList)
+      {
+        strncpy(properties[*propertiesCount].strName, property.GetCStructure()->strName,
+                sizeof(properties[*propertiesCount].strName) - 1);
+        strncpy(properties[*propertiesCount].strValue, property.GetCStructure()->strValue,
+                sizeof(properties[*propertiesCount].strValue) - 1);
+        ++*propertiesCount;
+        if (*propertiesCount > STREAM_MAX_PROPERTY_COUNT)
+          break;
+      }
+    }
+    return error;
+  }
+
+  inline static PVR_ERROR ADDON_CallMediaTagMenuHook(const AddonInstance_PVR* instance,
+                                                      const PVR_MENUHOOK* menuhook,
+                                                      const PVR_MEDIA_TAG* mediaTag)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->CallMediaTagMenuHook(menuhook, mediaTag);
+  }
+
+  //--==----==----==----==----==----==----==----==----==----==----==----==----==
+
+
   inline static PVR_ERROR ADDON_OnSystemSleep(const AddonInstance_PVR* instance)
   {
     return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)->OnSystemSleep();
@@ -3490,6 +4075,40 @@ private:
   {
     return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
         ->LengthRecordedStream();
+  }
+
+  inline static bool ADDON_OpenMediaStream(const AddonInstance_PVR* instance,
+                                              const PVR_MEDIA_TAG* mediaTag)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->OpenMediaStream(mediaTag);
+  }
+
+  inline static void ADDON_CloseMediaStream(const AddonInstance_PVR* instance)
+  {
+    static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)->CloseMediaStream();
+  }
+
+  inline static int ADDON_ReadMediaStream(const AddonInstance_PVR* instance,
+                                             unsigned char* buffer,
+                                             unsigned int size)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->ReadMediaStream(buffer, size);
+  }
+
+  inline static int64_t ADDON_SeekMediaStream(const AddonInstance_PVR* instance,
+                                                 int64_t position,
+                                                 int whence)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->SeekMediaStream(position, whence);
+  }
+
+  inline static int64_t ADDON_LengthMediaStream(const AddonInstance_PVR* instance)
+  {
+    return static_cast<CInstancePVRClient*>(instance->toAddon->addonInstance)
+        ->LengthMediaStream();
   }
 
   inline static void ADDON_DemuxReset(const AddonInstance_PVR* instance)

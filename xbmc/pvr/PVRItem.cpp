@@ -14,6 +14,8 @@
 #include "pvr/channels/PVRChannel.h"
 #include "pvr/channels/PVRChannelGroupsContainer.h"
 #include "pvr/epg/EpgInfoTag.h"
+#include "pvr/media/PVRMedia.h"
+#include "pvr/media/PVRMediaTag.h"
 #include "pvr/recordings/PVRRecording.h"
 #include "pvr/recordings/PVRRecordings.h"
 #include "pvr/timers/PVRTimerInfoTag.h"
@@ -127,6 +129,19 @@ namespace PVR
       CLog::LogF(LOGERROR, "Unsupported item type!");
     }
     return std::shared_ptr<CPVRRecording>();
+  }
+
+  std::shared_ptr<CPVRMediaTag> CPVRItem::GetMediaTag() const
+  {
+    if (m_item->IsPVRMediaTag())
+    {
+      return m_item->GetPVRMediaInfoTag();
+    }
+    else
+    {
+      CLog::LogF(LOGERROR, "Unsupported item type!");
+    }
+    return std::shared_ptr<CPVRMediaTag>();
   }
 
   bool CPVRItem::IsRadio() const

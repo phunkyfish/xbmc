@@ -27,6 +27,8 @@
 #include "pvr/channels/PVRRadioRDSInfoTag.h"
 #include "pvr/epg/EpgInfoTag.h"
 #include "pvr/guilib/PVRGUIActions.h"
+#include "pvr/media/PVRMedia.h"
+#include "pvr/media/PVRMediaTag.h"
 #include "pvr/recordings/PVRRecording.h"
 #include "pvr/recordings/PVRRecordings.h"
 #include "pvr/timers/PVRTimerInfoTag.h"
@@ -472,6 +474,73 @@ bool CPVRGUIInfo::GetListItemAndPlayerLabel(const CFileItem* item, const CGUIInf
     return false;
   }
 
+  const std::shared_ptr<CPVRMediaTag> mediaTag(item->GetPVRMediaInfoTag());
+  if (mediaTag)
+  {
+    // Note: CPVRMediaTag is derived from CVideoInfoTag. All base class properties will be handled
+    //       by CVideoGUIInfoProvider. Only properties introduced by CPVRMediaTag need to be handled here.
+    switch (info.m_info)
+    {
+      case LISTITEM_DATE:
+        strValue = GetAsLocalizedDateTimeString(mediaTag->MediaTagTimeAsLocalTime());
+        return true;
+      case LISTITEM_STARTDATE:
+        strValue = GetAsLocalizedDateString(mediaTag->MediaTagTimeAsLocalTime(), true);
+        return true;
+      case VIDEOPLAYER_STARTTIME:
+      case LISTITEM_STARTTIME:
+        strValue = GetAsLocalizedTimeString(mediaTag->MediaTagTimeAsLocalTime());
+        return true;
+      case VIDEOPLAYER_EPISODENAME:
+      case LISTITEM_EPISODENAME:
+        strValue = mediaTag->EpisodeName();
+        // fixup multiline episode name strings (which do not fit in any way in our GUI)
+        StringUtils::Replace(strValue, "\n", ", ");
+        return true;
+      case VIDEOPLAYER_CHANNEL_NAME:
+      case LISTITEM_CHANNEL_NAME:
+        strValue = mediaTag->m_strProviderName;
+        return true;
+      case VIDEOPLAYER_PREMIERED:
+      case LISTITEM_PREMIERED:
+        if (mediaTag->FirstAired().IsValid())
+        {
+          strValue = mediaTag->FirstAired().GetAsLocalizedDate();
+          return true;
+        }
+        else if (mediaTag->HasYear())
+        {
+          strValue = StringUtils::Format("%i", mediaTag->GetYear());
+          return true;
+        }
+        return false;
+      case LISTITEM_SIZE:
+        if (mediaTag->GetSizeInBytes() > 0)
+        {
+          strValue = StringUtils::SizeToString(mediaTag->GetSizeInBytes());
+          return true;
+        }
+        return false;
+      case VIDEOPLAYER_IMDBNUMBER:
+      case LISTITEM_IMDBNUMBER:
+        strValue = mediaTag->IMDBNumber();
+        return true;
+      case VIDEOPLAYER_CAST:
+      case LISTITEM_CAST:
+        strValue = mediaTag->GetCastLabel();
+        return true;
+      case VIDEOPLAYER_DIRECTOR:
+      case LISTITEM_DIRECTOR:
+        strValue = mediaTag->GetDirectorsLabel();
+        return true;
+      case VIDEOPLAYER_WRITER:
+      case LISTITEM_WRITER:
+        strValue = mediaTag->GetWritersLabel();
+        return true;
+    }
+    return false;
+  }
+
   std::shared_ptr<CPVREpgInfoTag> epgTag;
   std::shared_ptr<CPVRChannel> channel;
   if (item->IsPVRChannel() || item->IsEPG() || item->IsPVRTimer())
@@ -908,6 +977,12 @@ bool CPVRGUIInfo::GetPVRLabel(const CFileItem* item, const CGUIInfo& info, std::
       return true;
     case PVR_BACKEND_DELETED_RECORDINGS:
       CharInfoBackendDeletedRecordings(strValue);
+      return true;
+    case PVR_BACKEND_MEDIA:
+      CharInfoBackendMedia(strValue);
+      return true;
+    case PVR_BACKEND_DELETED_MEDIA:
+      CharInfoBackendDeletedMedia(strValue);
       return true;
     case PVR_BACKEND_NUMBER:
       CharInfoBackendNumber(strValue);
@@ -1694,6 +1769,18 @@ void CPVRGUIInfo::CharInfoBackendDeletedRecordings(std::string& strValue) const
   strValue = m_strBackendDeletedRecordings;
 }
 
+void CPVRGUIInfo::CharInfoBackendMedia(std::string& strValue) const
+{
+  m_updateBackendCacheRequested = true;
+  strValue = m_strBackendMedia;
+}
+
+void CPVRGUIInfo::CharInfoBackendDeletedMedia(std::string& strValue) const
+{
+  m_updateBackendCacheRequested = true;
+  strValue = m_strBackendDeletedMedia;
+}
+
 void CPVRGUIInfo::CharInfoPlayingClientName(std::string& strValue) const
 {
   if (m_strPlayingClientName.empty())
@@ -1775,6 +1862,8 @@ void CPVRGUIInfo::UpdateBackendCache()
   m_strBackendTimers = g_localizeStrings.Get(13205);
   m_strBackendRecordings = g_localizeStrings.Get(13205);
   m_strBackendDeletedRecordings = g_localizeStrings.Get(13205);
+  m_strBackendMedia = g_localizeStrings.Get(13205);
+  m_strBackendDeletedMedia = g_localizeStrings.Get(13205);
   m_iBackendDiskTotal = 0;
   m_iBackendDiskUsed = 0;
 
@@ -1805,6 +1894,12 @@ void CPVRGUIInfo::UpdateBackendCache()
 
     if (backend.numDeletedRecordings >= 0)
       m_strBackendDeletedRecordings = StringUtils::Format("%i", backend.numDeletedRecordings);
+
+    if (backend.numMedia >= 0)
+      m_strBackendMedia = StringUtils::Format("%i", backend.numMedia);
+
+    if (backend.numDeletedMedia >= 0)
+      m_strBackendDeletedMedia = StringUtils::Format("%i", backend.numDeletedMedia);
 
     m_iBackendDiskTotal = backend.diskTotal;
     m_iBackendDiskUsed = backend.diskUsed;

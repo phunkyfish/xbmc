@@ -10,6 +10,7 @@ set(SOURCES DVDFactoryInputStream.cpp
             InputStreamMultiSource.cpp
             InputStreamPVRBase.cpp
             InputStreamPVRChannel.cpp
+            InputStreamPVRMedia.cpp
             InputStreamPVRRecording.cpp)
 
 set(HEADERS DVDFactoryInputStream.h
@@ -26,6 +27,7 @@ set(HEADERS DVDFactoryInputStream.h
             InputStreamMultiSource.h
             InputStreamPVRBase.h
             InputStreamPVRChannel.h
+            InputStreamPVRMedia.h
             InputStreamPVRRecording.h)
 
 if(BLURAY_FOUND)

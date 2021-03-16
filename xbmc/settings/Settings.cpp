@@ -222,6 +222,7 @@ constexpr const char* CSettings::SETTING_PVRRECORD_MARGINSTART;
 constexpr const char* CSettings::SETTING_PVRRECORD_MARGINEND;
 constexpr const char* CSettings::SETTING_PVRRECORD_TIMERNOTIFICATIONS;
 constexpr const char* CSettings::SETTING_PVRRECORD_GROUPRECORDINGS;
+constexpr const char* CSettings::SETTING_PVRMEDIA_GROUPMEDIA;
 constexpr const char* CSettings::SETTING_PVRREMINDERS_AUTOCLOSEDELAY;
 constexpr const char* CSettings::SETTING_PVRREMINDERS_AUTORECORD;
 constexpr const char* CSettings::SETTING_PVRREMINDERS_AUTOSWITCH;

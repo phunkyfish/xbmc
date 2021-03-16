@@ -27,7 +27,9 @@ CPVRClientMenuHook::CPVRClientMenuHook(const std::string& addonId, const PVR_MEN
       hook.category != PVR_MENUHOOK_EPG &&
       hook.category != PVR_MENUHOOK_RECORDING &&
       hook.category != PVR_MENUHOOK_DELETED_RECORDING &&
-      hook.category != PVR_MENUHOOK_SETTING)
+      hook.category != PVR_MENUHOOK_SETTING &&
+      hook.category != PVR_MENUHOOK_MEDIA_TAG &&
+      hook.category != PVR_MENUHOOK_DELETED_MEDIA_TAG)
     CLog::LogF(LOGERROR, "Unknown PVR_MENUHOOK_CAT value: {}", hook.category);
 }
 
@@ -75,6 +77,16 @@ bool CPVRClientMenuHook::IsDeletedRecordingHook() const
 bool CPVRClientMenuHook::IsSettingsHook() const
 {
   return m_hook->category == PVR_MENUHOOK_SETTING;
+}
+
+bool CPVRClientMenuHook::IsMediaTagHook() const
+{
+  return m_hook->category == PVR_MENUHOOK_MEDIA_TAG;
+}
+
+bool CPVRClientMenuHook::IsDeletedMediaTagHook() const
+{
+  return m_hook->category == PVR_MENUHOOK_DELETED_MEDIA_TAG;
 }
 
 unsigned int CPVRClientMenuHook::GetId() const
@@ -175,6 +187,16 @@ std::vector<CPVRClientMenuHook> CPVRClientMenuHooks::GetSettingsHooks() const
   {
     return hook.IsSettingsHook();
   });
+}
+
+std::vector<CPVRClientMenuHook> CPVRClientMenuHooks::GetMediaTagHooks() const
+{
+  return GetHooks([](const CPVRClientMenuHook& hook) { return hook.IsMediaTagHook(); });
+}
+
+std::vector<CPVRClientMenuHook> CPVRClientMenuHooks::GetDeletedMediaTagHooks() const
+{
+  return GetHooks([](const CPVRClientMenuHook& hook) { return hook.IsDeletedMediaTagHook(); });
 }
 
 } // namespace PVR

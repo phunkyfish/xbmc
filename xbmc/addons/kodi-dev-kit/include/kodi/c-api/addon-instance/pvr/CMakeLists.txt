@@ -5,6 +5,7 @@ set(HEADERS pvr_channel_groups.h
             pvr_edl.h
             pvr_epg.h
             pvr_general.h
+            pvr_media.h
             pvr_menu_hook.h
             pvr_recordings.h
             pvr_stream.h
