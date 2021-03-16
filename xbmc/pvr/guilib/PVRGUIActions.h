@@ -37,6 +37,7 @@ namespace PVR
     SUCCESS
   };
 
+  class CPVRMediaTag;
   class CPVRRecording;
   class CPVRStreamProperties;
   class CPVRTimerInfoTag;
@@ -259,6 +260,91 @@ namespace PVR
      * @return true on success, false otherwise.
      */
     bool PlayRecording(const std::shared_ptr<CFileItem>& item, bool bCheckResume) const;
+
+    /*!
+     * @brief Open a dialog with information for a given mediaTag.
+     * @param item containing a mediaTag.
+     * @return true on success, false otherwise.
+     */
+    bool ShowMediaTagInfo(const std::shared_ptr<CFileItem>& item) const;
+
+    // /*!
+    //  * @brief Toggle mediaTag on the currently playing channel, if any.
+    //  * @return True if the mediaTag was started or stopped successfully, false otherwise.
+    //  */
+    // bool ToggleMediaTagOnPlayingChannel();
+
+    // /*!
+    //  * @brief Start or stop mediaTag on a given channel.
+    //  * @param channel the channel to start/stop mediaTag.
+    //  * @param bOnOff True to start mediaTag, false to stop.
+    //  * @return True if the mediaTag was started or stopped successfully, false otherwise.
+    //  */
+    // bool SetMediaTagOnChannel(const std::shared_ptr<CPVRChannel>& channel, bool bOnOff);
+
+    // /*!
+    //  * @brief Stop a currently active mediaTag, always showing a confirmation dialog.
+    //  * @param item containing a mediaTag to stop. item must be a timer, an epg tag or a channel.
+    //  * @return true, if the mediaTag was stopped successfully, false otherwise.
+    //  */
+    // bool StopMediaTag(const std::shared_ptr<CFileItem>& item) const;
+
+    /*!
+     * @brief Open the mediaTag settings dialog to edit a mediaTag.
+     * @param item containing the mediaTag to edit.
+     * @return true on success, false otherwise.
+     */
+    bool EditMediaTag(const std::shared_ptr<CFileItem>& item) const;
+
+    /*!
+     * @brief Check if any mediaTag settings can be edited.
+     * @param item containing the mediaTag to edit.
+     * @return true on success, false otherwise.
+     */
+    bool CanEditMediaTag(const CFileItem& item) const;
+
+    /*!
+     * @brief Delete a mediaTag, always showing a confirmation dialog.
+     * @param item containing a mediaTag to delete.
+     * @return true, if the mediaTag was deleted successfully, false otherwise.
+     */
+    bool DeleteMediaTag(const std::shared_ptr<CFileItem>& item) const;
+
+    /*!
+     * @brief Delete all watched media contained in the given folder, always showing a confirmation dialog.
+     * @param item containing a mediaTag folder containing the items to delete.
+     * @return true, if the media were deleted successfully, false otherwise.
+     */
+    bool DeleteWatchedMedia(const std::shared_ptr<CFileItem>& item) const;
+
+    /*!
+     * @brief Delete all media from trash, always showing a confirmation dialog.
+     * @return true, if the media were permanently deleted successfully, false otherwise.
+     */
+    bool DeleteAllMediaFromTrash() const;
+
+    /*!
+     * @brief Undelete a mediaTag.
+     * @param item containing a mediaTag to undelete.
+     * @return true, if the mediaTag was undeleted successfully, false otherwise.
+     */
+    bool UndeleteMediaTag(const std::shared_ptr<CFileItem>& item) const;
+
+    /*!
+     * @brief Resume a previously not completely played mediaTag.
+     * @param item containing a mediaTag or an epg tag.
+     * @param bFallbackToPlay controls whether playback of the mediaTag should be started at the beginning ig no resume data are available.
+     * @return true on success, false otherwise.
+     */
+    bool ResumePlayMediaTag(const std::shared_ptr<CFileItem>& item, bool bFallbackToPlay) const;
+
+    /*!
+     * @brief Play mediaTag.
+     * @param item containing a mediaTag or an epg tag.
+     * @param bCheckResume controls resume check.
+     * @return true on success, false otherwise.
+     */
+    bool PlayMediaTag(const std::shared_ptr<CFileItem>& item, bool bCheckResume) const;
 
     /*!
      * @brief Play EPG tag.
@@ -512,6 +598,40 @@ namespace PVR
      * @return true, to play/resume the item, false otherwise.
      */
     bool CheckResumeRecording(const std::shared_ptr<CFileItem>& item) const;
+
+    /*!
+     * @brief Open a dialog to confirm to delete a mediaTag.
+     * @param item the mediaTag to delete.
+     * @return true, to proceed with delete, false otherwise.
+     */
+    bool ConfirmDeleteMediaTag(const std::shared_ptr<CFileItem>& item) const;
+
+    /*!
+     * @brief Open a dialog to confirm delete all watched media contained in the given folder.
+     * @param item containing a mediaTag folder containing the items to delete.
+     * @return true, to proceed with delete, false otherwise.
+     */
+    bool ConfirmDeleteWatchedMedia(const std::shared_ptr<CFileItem>& item) const;
+
+    /*!
+     * @brief Open a dialog to confirm to permanently remove all deleted media.
+     * @return true, to proceed with delete, false otherwise.
+     */
+    bool ConfirmDeleteAllMediaFromTrash() const;
+
+    /*!
+     * @brief Open the mediaTag settings dialog.
+     * @param mediaTag containing the mediaTag the settings shall be displayed for.
+     * @return true, if the dialog was ended successfully, false otherwise.
+     */
+    bool ShowMediaTagSettings(const std::shared_ptr<CPVRMediaTag>& mediaTag) const;
+
+    /*!
+     * @brief Check whether resume play is possible for a given item, display "resume from ..."/"play from start" context menu in case.
+     * @param item containing a mediaTag or an epg tag.
+     * @return true, to play/resume the item, false otherwise.
+     */
+    bool CheckResumeMediaTag(const std::shared_ptr<CFileItem>& item) const;
 
     /*!
      * @brief Check "play minimized" settings value and switch to fullscreen if not set.

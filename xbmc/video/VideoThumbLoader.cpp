@@ -84,6 +84,7 @@ bool CThumbExtractor::DoWork()
   // Due to a pvr addon api design flaw (no support for multiple concurrent streams
   // per addon instance), pvr recording thumbnail extraction does not work (reliably).
   ||  URIUtils::IsPVRRecording(m_item.GetDynPath())
+  ||  URIUtils::IsPVRMediaTag(m_item.GetDynPath())
   ||  URIUtils::IsUPnP(m_item.GetPath())
   ||  URIUtils::IsBluray(m_item.GetPath())
   ||  URIUtils::IsPlugin(m_item.GetDynPath()) // plugin path not fully resolved
@@ -381,7 +382,7 @@ bool CVideoThumbLoader::LoadItemCached(CFileItem* pItem)
     pItem->AppendArt(artwork);
   }
 
-  // hide thumb if episode is unwatched 
+  // hide thumb if episode is unwatched
   std::shared_ptr<CSettingList> setting(std::dynamic_pointer_cast<CSettingList>(
     CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)));
   if (pItem->HasArt("thumb") && pItem->HasVideoInfoTag() &&
@@ -525,8 +526,8 @@ bool CVideoThumbLoader::FillLibraryArt(CFileItem &item)
 {
   CVideoInfoTag &tag = *item.GetVideoInfoTag();
   std::map<std::string, std::string> artwork;
-  // Video item can be an album - either a 
-  // a) search result with full details including music library album id, or 
+  // Video item can be an album - either a
+  // a) search result with full details including music library album id, or
   // b) musicvideo album that needs matching to a music album, storing id as well as fetch art.
   if (tag.m_type == MediaTypeAlbum)
   {

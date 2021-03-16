@@ -37,6 +37,7 @@
 #include "pvr/channels/PVRChannel.h"
 #include "pvr/channels/PVRChannelGroupsContainer.h"
 #include "pvr/epg/EpgInfoTag.h"
+#include "pvr/media/PVRMediaTag.h"
 #include "pvr/recordings/PVRRecording.h"
 #include "pvr/timers/PVRTimerInfoTag.h"
 #include "settings/AdvancedSettings.h"
@@ -242,6 +243,32 @@ CFileItem::CFileItem(const std::shared_ptr<CPVRTimerInfoTag>& timer)
   FillInMimeType(false);
 }
 
+CFileItem::CFileItem(const std::shared_ptr<CPVRMediaTag>& mediaTag)
+{
+  Initialize();
+
+  m_bIsFolder = false;
+  m_pvrMediaInfoTag = mediaTag;
+  m_strPath = mediaTag->m_strFileNameAndPath;
+  SetLabel(mediaTag->m_strTitle);
+  m_dateTime = mediaTag->MediaTagTimeAsLocalTime();
+  m_dwSize = mediaTag->GetSizeInBytes();
+
+  // Set art
+  if (!mediaTag->m_strIconPath.empty())
+  {
+    SetArt("icon", mediaTag->m_strIconPath);
+  }
+
+  if (!mediaTag->m_strThumbnailPath.empty())
+    SetArt("thumb", mediaTag->m_strThumbnailPath);
+
+  if (!mediaTag->m_strFanartPath.empty())
+    SetArt("fanart", mediaTag->m_strFanartPath);
+
+  FillInMimeType(false);
+}
+
 CFileItem::CFileItem(const CArtist& artist)
 {
   Initialize();
@@ -443,6 +470,7 @@ CFileItem& CFileItem::operator=(const CFileItem& item)
 
   m_epgInfoTag = item.m_epgInfoTag;
   m_pvrChannelInfoTag = item.m_pvrChannelInfoTag;
+  m_pvrMediaInfoTag = item.m_pvrMediaInfoTag;
   m_pvrRecordingInfoTag = item.m_pvrRecordingInfoTag;
   m_pvrTimerInfoTag = item.m_pvrTimerInfoTag;
   m_addonInfo = item.m_addonInfo;
@@ -516,6 +544,7 @@ void CFileItem::Reset()
   m_videoInfoTag=NULL;
   m_epgInfoTag.reset();
   m_pvrChannelInfoTag.reset();
+  m_pvrMediaInfoTag.reset();
   m_pvrRecordingInfoTag.reset();
   m_pvrTimerInfoTag.reset();
   delete m_pictureInfoTag;
@@ -814,6 +843,10 @@ bool CFileItem::IsVideo() const
   if (IsPVRRecording())
     return !GetPVRRecordingInfoTag()->IsRadio();
 
+  // TODO: Do we also support audio only items?
+  if (IsPVRMediaTag())
+    return !GetPVRMediaInfoTag()->IsRadio();
+
   // ... all other PVR items are not.
   if (IsPVR())
     return false;
@@ -877,6 +910,21 @@ bool CFileItem::IsPVRTimer() const
   return HasPVRTimerInfoTag();
 }
 
+bool CFileItem::IsPVRMediaTag() const
+{
+  return HasPVRMediaInfoTag();
+}
+
+bool CFileItem::IsUsablePVRMediaTag() const
+{
+  return (m_pvrMediaInfoTag && !m_pvrMediaInfoTag->IsDeleted());
+}
+
+bool CFileItem::IsDeletedPVRMediaTag() const
+{
+  return (m_pvrMediaInfoTag && m_pvrMediaInfoTag->IsDeleted());
+}
+
 bool CFileItem::IsDiscStub() const
 {
   if (IsVideoDb() && HasVideoInfoTag())
@@ -928,6 +976,9 @@ bool CFileItem::IsDeleted() const
 {
   if (HasPVRRecordingInfoTag())
     return GetPVRRecordingInfoTag()->IsDeleted();
+
+  if (HasPVRMediaInfoTag())
+    return GetPVRMediaInfoTag()->IsDeleted();
 
   return false;
 }
@@ -1360,6 +1411,16 @@ void CFileItem::FillInDefaultIcon()
         // PVR deleted recording
         SetArt("icon", "DefaultVideoDeleted.png");
       }
+      else if (IsUsablePVRMediaTag())
+      {
+        // PVR mediaTag
+        SetArt("icon", "DefaultVideo.png");
+      }
+      else if (IsDeletedPVRMediaTag())
+      {
+        // PVR deleted mediaTag
+        SetArt("icon", "DefaultVideoDeleted.png");
+      }
       else if ( IsAudio() )
       {
         // audio
@@ -1618,6 +1679,7 @@ void CFileItem::UpdateInfo(const CFileItem &item, bool replaceLabels /*=true*/)
     }
 
     m_pvrRecordingInfoTag = item.m_pvrRecordingInfoTag;
+    m_pvrMediaInfoTag = item.m_pvrMediaInfoTag;
 
     SetOverlayImage(ICON_OVERLAY_UNWATCHED, GetVideoInfoTag()->GetPlayCount() > 0);
     SetInvalid();
@@ -1661,6 +1723,7 @@ void CFileItem::MergeInfo(const CFileItem& item)
     }
 
     m_pvrRecordingInfoTag = item.m_pvrRecordingInfoTag;
+    m_pvrMediaInfoTag = item.m_pvrMediaInfoTag;
 
     SetOverlayImage(ICON_OVERLAY_UNWATCHED, GetVideoInfoTag()->GetPlayCount() > 0);
     SetInvalid();
@@ -3161,7 +3224,7 @@ std::string CFileItem::GetUserMusicThumb(bool alwaysCheckRemote /* = false */, b
         StringUtils::Replace(folderThumb1, strFileName, name + ext);
         if (CFile::Exists(folderThumb1)) // folder.JPG
           return folderThumb1;
-        
+
         folderThumb1 = folderThumb;
         std::string firstletter = name.substr(0, 1);
         StringUtils::ToUpper(firstletter);
@@ -3169,7 +3232,7 @@ std::string CFileItem::GetUserMusicThumb(bool alwaysCheckRemote /* = false */, b
         StringUtils::Replace(folderThumb1, strFileName, name + ext);
         if (CFile::Exists(folderThumb1)) // Folder.JPG
           return folderThumb1;
-        
+
         folderThumb1 = folderThumb;
         StringUtils::ToLower(ext);
         StringUtils::Replace(folderThumb1, strFileName, name + ext);
@@ -3244,6 +3307,7 @@ bool CFileItem::SkipLocalArt() const
        || IsParentFolder()
        || IsLiveTV()
        || IsPVRRecording()
+       || IsPVRMediaTag()
        || IsDVD());
 }
 
@@ -3364,6 +3428,15 @@ std::string CFileItem::GetMovieName(bool bUseFolderNames /* = false */) const
   else if (URIUtils::IsPVRRecording(m_strPath))
   {
     std::string title = CPVRRecording::GetTitleFromURL(m_strPath);
+    if (!title.empty())
+      return title;
+  }
+
+  if (m_pvrMediaInfoTag)
+    return m_pvrMediaInfoTag->m_strTitle;
+  else if (URIUtils::IsPVRMediaTag(m_strPath))
+  {
+    std::string title = CPVRMediaTag::GetTitleFromURL(m_strPath);
     if (!title.empty())
       return title;
   }
@@ -3645,15 +3718,18 @@ void CFileItemList::ClearSortState()
 
 bool CFileItem::HasVideoInfoTag() const
 {
-  // Note: CPVRRecording is derived from CVideoInfoTag
-  return m_pvrRecordingInfoTag.get() != nullptr || m_videoInfoTag != nullptr;
+  // Note: CPVRRecording and CPVRMediaTag are derived from CVideoInfoTag
+  return m_pvrRecordingInfoTag.get() != nullptr || m_pvrMediaInfoTag.get() != nullptr ||
+         m_videoInfoTag != nullptr;
 }
 
 CVideoInfoTag* CFileItem::GetVideoInfoTag()
 {
-  // Note: CPVRRecording is derived from CVideoInfoTag
+  // Note: CPVRRecording and CPVRMediaTag are derived from CVideoInfoTag
   if (m_pvrRecordingInfoTag)
     return m_pvrRecordingInfoTag.get();
+  else if (m_pvrMediaInfoTag)
+    return m_pvrMediaInfoTag.get();
   else if (!m_videoInfoTag)
     m_videoInfoTag = new CVideoInfoTag;
 
@@ -3662,8 +3738,14 @@ CVideoInfoTag* CFileItem::GetVideoInfoTag()
 
 const CVideoInfoTag* CFileItem::GetVideoInfoTag() const
 {
-  // Note: CPVRRecording is derived from CVideoInfoTag
-  return m_pvrRecordingInfoTag ? m_pvrRecordingInfoTag.get() : m_videoInfoTag;
+  // Note: CPVRRecording and CPVRMediaTag are derived from CVideoInfoTag
+
+  if (m_pvrRecordingInfoTag)
+    return m_pvrRecordingInfoTag.get();
+  else if (m_pvrMediaInfoTag)
+    return m_pvrMediaInfoTag.get();
+
+  return m_videoInfoTag;
 }
 
 CPictureInfoTag* CFileItem::GetPictureInfoTag()

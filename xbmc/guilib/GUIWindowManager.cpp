@@ -112,12 +112,15 @@
 #include "pvr/dialogs/GUIDialogPVRGuideControls.h"
 #include "pvr/dialogs/GUIDialogPVRGuideInfo.h"
 #include "pvr/dialogs/GUIDialogPVRGuideSearch.h"
+#include "pvr/dialogs/GUIDialogPVRMediaTagInfo.h"
+#include "pvr/dialogs/GUIDialogPVRMediaTagSettings.h"
 #include "pvr/dialogs/GUIDialogPVRRadioRDSInfo.h"
 #include "pvr/dialogs/GUIDialogPVRRecordingInfo.h"
 #include "pvr/dialogs/GUIDialogPVRRecordingSettings.h"
 #include "pvr/dialogs/GUIDialogPVRTimerSettings.h"
 #include "pvr/windows/GUIWindowPVRChannels.h"
 #include "pvr/windows/GUIWindowPVRGuide.h"
+#include "pvr/windows/GUIWindowPVRMedia.h"
 #include "pvr/windows/GUIWindowPVRRecordings.h"
 #include "pvr/windows/GUIWindowPVRSearch.h"
 #include "pvr/windows/GUIWindowPVRTimerRules.h"
@@ -250,12 +253,14 @@ void CGUIWindowManager::CreateWindows()
   Add(new CGUIDialogTeletext);
   Add(new CGUIWindowPVRTVChannels);
   Add(new CGUIWindowPVRTVRecordings);
+  Add(new CGUIWindowPVRTVMedia);
   Add(new CGUIWindowPVRTVGuide);
   Add(new CGUIWindowPVRTVTimers);
   Add(new CGUIWindowPVRTVTimerRules);
   Add(new CGUIWindowPVRTVSearch);
   Add(new CGUIWindowPVRRadioChannels);
   Add(new CGUIWindowPVRRadioRecordings);
+  Add(new CGUIWindowPVRRadioMedia);
   Add(new CGUIWindowPVRRadioGuide);
   Add(new CGUIWindowPVRRadioTimers);
   Add(new CGUIWindowPVRRadioTimerRules);
@@ -272,6 +277,8 @@ void CGUIWindowManager::CreateWindows()
   Add(new CGUIDialogPVRRecordingSettings);
   Add(new CGUIDialogPVRClientPriorities);
   Add(new CGUIDialogPVRGuideControls);
+  Add(new CGUIDialogPVRMediaTagInfo);
+  Add(new CGUIDialogPVRMediaTagSettings);
 
   Add(new CGUIDialogSelect);
   Add(new CGUIDialogMusicInfo);
@@ -368,6 +375,8 @@ bool CGUIWindowManager::DestroyWindows()
     DestroyWindow(WINDOW_RADIO_TIMERS);
     DestroyWindow(WINDOW_RADIO_TIMER_RULES);
     DestroyWindow(WINDOW_RADIO_SEARCH);
+    DestroyWindow(WINDOW_TV_MEDIA);
+    DestroyWindow(WINDOW_RADIO_MEDIA);
     DestroyWindow(WINDOW_DIALOG_PVR_GUIDE_INFO);
     DestroyWindow(WINDOW_DIALOG_PVR_RECORDING_INFO);
     DestroyWindow(WINDOW_DIALOG_PVR_TIMER_SETTING);
@@ -383,6 +392,8 @@ bool CGUIWindowManager::DestroyWindows()
     DestroyWindow(WINDOW_DIALOG_PVR_RECORDING_SETTING);
     DestroyWindow(WINDOW_DIALOG_PVR_CLIENT_PRIORITIES);
     DestroyWindow(WINDOW_DIALOG_PVR_GUIDE_CONTROLS);
+    DestroyWindow(WINDOW_DIALOG_PVR_MEDIA_TAG_INFO);
+    DestroyWindow(WINDOW_DIALOG_PVR_MEDIA_TAG_SETTING);
 
     DestroyWindow(WINDOW_DIALOG_TEXT_VIEWER);
     DestroyWindow(WINDOW_DIALOG_PLAY_EJECT);

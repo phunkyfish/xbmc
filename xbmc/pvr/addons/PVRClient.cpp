@@ -31,6 +31,8 @@
 #include "pvr/epg/EpgInfoTag.h"
 #include "pvr/providers/PVRProvider.h"
 #include "pvr/providers/PVRProviders.h"
+#include "pvr/media/PVRMedia.h"
+#include "pvr/media/PVRMediaTag.h"
 #include "pvr/recordings/PVRRecording.h"
 #include "pvr/recordings/PVRRecordings.h"
 #include "pvr/timers/PVRTimerInfoTag.h"
@@ -134,6 +136,7 @@ void CPVRClient::ResetProperties(int iClientId /* = PVR_INVALID_CLIENT_ID */)
   m_struct.toKodi->TransferProviderEntry = cb_transfer_provider_entry;
   m_struct.toKodi->TransferTimerEntry = cb_transfer_timer_entry;
   m_struct.toKodi->TransferRecordingEntry = cb_transfer_recording_entry;
+  m_struct.toKodi->TransferMediaTagEntry = cb_transfer_media_entry;
   m_struct.toKodi->AddMenuHook = cb_add_menu_hook;
   m_struct.toKodi->RecordingNotification = cb_recording_notification;
   m_struct.toKodi->TriggerChannelUpdate = cb_trigger_channel_update;
@@ -141,6 +144,7 @@ void CPVRClient::ResetProperties(int iClientId /* = PVR_INVALID_CLIENT_ID */)
   m_struct.toKodi->TriggerChannelGroupsUpdate = cb_trigger_channel_groups_update;
   m_struct.toKodi->TriggerTimerUpdate = cb_trigger_timer_update;
   m_struct.toKodi->TriggerRecordingUpdate = cb_trigger_recording_update;
+  m_struct.toKodi->TriggerMediaUpdate = cb_trigger_media_update;
   m_struct.toKodi->TriggerEpgUpdate = cb_trigger_epg_update;
   m_struct.toKodi->FreeDemuxPacket = cb_free_demux_packet;
   m_struct.toKodi->AllocateDemuxPacket = cb_allocate_demux_packet;
@@ -322,6 +326,77 @@ void CPVRClient::WriteClientRecordingInfo(const CPVRRecording& xbmcRecording,
   if (xbmcRecording.FirstAired().IsValid())
     strncpy(addonRecording.strFirstAired, xbmcRecording.FirstAired().GetAsW3CDate().c_str(),
             sizeof(addonRecording.strFirstAired) - 1);
+}
+
+/*!
+ * @brief Copy over mediaTag info from xbmcMediaTag to addonMediaTag.
+ * @param xbmcMediaTag The mediaTag on XBMC's side.
+ * @param addonMediaTag The mediaTag on the addon's side.
+ */
+void CPVRClient::WriteClientMediaTagInfo(const CPVRMediaTag& xbmcMediaTag,
+                                         PVR_MEDIA_TAG& addonMediaTag)
+{
+  time_t recTime;
+  xbmcMediaTag.MediaTagTimeAsUTC().GetAsTime(recTime);
+
+  addonMediaTag = {{0}};
+  strncpy(addonMediaTag.strMediaTagId, xbmcMediaTag.m_strMediaTagId.c_str(),
+          sizeof(addonMediaTag.strMediaTagId) - 1);
+  strncpy(addonMediaTag.strTitle, xbmcMediaTag.m_strTitle.c_str(),
+          sizeof(addonMediaTag.strTitle) - 1);
+  strncpy(addonMediaTag.strEpisodeName, xbmcMediaTag.m_strShowTitle.c_str(),
+          sizeof(addonMediaTag.strEpisodeName) - 1);
+  addonMediaTag.iSeriesNumber = xbmcMediaTag.m_iSeason;
+  addonMediaTag.iEpisodeNumber = xbmcMediaTag.m_iEpisode;
+  addonMediaTag.iYear = xbmcMediaTag.GetYear();
+  strncpy(addonMediaTag.strDirectory, xbmcMediaTag.m_strDirectory.c_str(),
+          sizeof(addonMediaTag.strDirectory) - 1);
+  strncpy(addonMediaTag.strPlotOutline, xbmcMediaTag.m_strPlotOutline.c_str(),
+          sizeof(addonMediaTag.strPlotOutline) - 1);
+  strncpy(addonMediaTag.strPlot, xbmcMediaTag.m_strPlot.c_str(), sizeof(addonMediaTag.strPlot) - 1);
+  strncpy(addonMediaTag.strGenreDescription, xbmcMediaTag.GetGenresLabel().c_str(),
+          sizeof(addonMediaTag.strGenreDescription) - 1);
+  strncpy(addonMediaTag.strProviderName, xbmcMediaTag.m_strProviderName.c_str(),
+          sizeof(addonMediaTag.strProviderName) - 1);
+  strncpy(addonMediaTag.strIconPath, xbmcMediaTag.m_strIconPath.c_str(),
+          sizeof(addonMediaTag.strIconPath) - 1);
+  strncpy(addonMediaTag.strThumbnailPath, xbmcMediaTag.m_strThumbnailPath.c_str(),
+          sizeof(addonMediaTag.strThumbnailPath) - 1);
+  strncpy(addonMediaTag.strFanartPath, xbmcMediaTag.m_strFanartPath.c_str(),
+          sizeof(addonMediaTag.strFanartPath) - 1);
+  addonMediaTag.mediaTagTime =
+      recTime - CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_iPVRTimeCorrection;
+  addonMediaTag.iDuration = xbmcMediaTag.GetDuration();
+  addonMediaTag.iGenreType = xbmcMediaTag.GenreType();
+  addonMediaTag.iGenreSubType = xbmcMediaTag.GenreSubType();
+  addonMediaTag.iPlayCount = xbmcMediaTag.GetLocalPlayCount();
+  addonMediaTag.iLastPlayedPosition = lrint(xbmcMediaTag.GetLocalResumePoint().timeInSeconds);
+
+  strncpy(addonMediaTag.strOriginalTitle, xbmcMediaTag.m_strOriginalTitle.c_str(),
+          sizeof(addonMediaTag.strOriginalTitle) - 1);
+  strncpy(addonMediaTag.strCast, xbmcMediaTag.DeTokenize(xbmcMediaTag.m_cast).c_str(),
+          sizeof(addonMediaTag.strCast) - 1);
+  strncpy(addonMediaTag.strDirector, xbmcMediaTag.DeTokenize(xbmcMediaTag.m_directors).c_str(),
+          sizeof(addonMediaTag.strDirector) - 1);
+  strncpy(addonMediaTag.strWriter, xbmcMediaTag.DeTokenize(xbmcMediaTag.m_writers).c_str(),
+          sizeof(addonMediaTag.strWriter) - 1);
+  strncpy(addonMediaTag.strIMDBNumber, xbmcMediaTag.m_strIMDBNumber.c_str(),
+          sizeof(addonMediaTag.strIMDBNumber) - 1);
+  strncpy(addonMediaTag.strSeriesLink, xbmcMediaTag.m_strSeriesLink.c_str(),
+          sizeof(addonMediaTag.strSeriesLink) - 1);
+  strncpy(addonMediaTag.strParentalRatingCode, xbmcMediaTag.m_strParentalRatingCode.c_str(),
+          sizeof(addonMediaTag.strParentalRatingCode) - 1);
+  addonMediaTag.iParentalRating = xbmcMediaTag.ParentalRating();
+  addonMediaTag.iStarRating = xbmcMediaTag.StarRating();
+
+  addonMediaTag.bIsDeleted = xbmcMediaTag.IsDeleted();
+  addonMediaTag.iClientProviderUid = xbmcMediaTag.ClientProviderUniqueId();
+  addonMediaTag.mediaClass =
+      xbmcMediaTag.IsRadio() ? PVR_MEDIA_TAG_CLASS_AUDIO : PVR_MEDIA_TAG_CLASS_VIDEO;
+  addonMediaTag.mediaType = xbmcMediaTag.MediaType();
+  if (xbmcMediaTag.FirstAired().IsValid())
+    strncpy(addonMediaTag.strFirstAired, xbmcMediaTag.FirstAired().GetAsW3CDate().c_str(),
+            sizeof(addonMediaTag.strFirstAired) - 1);
 }
 
 /*!
@@ -1172,6 +1247,161 @@ PVR_ERROR CPVRClient::GetTimerTypes(std::vector<std::shared_ptr<CPVRTimerType>>&
   return PVR_ERROR_NO_ERROR;
 }
 
+PVR_ERROR CPVRClient::GetMediaAmount(bool deleted, int& iMedia)
+{
+  iMedia = -1;
+  return DoAddonCall(
+      __func__,
+      [deleted, &iMedia](const AddonInstance* addon) {
+        return addon->toAddon->GetMediaAmount(addon, deleted, &iMedia);
+      },
+      m_clientCapabilities.SupportsMedia() &&
+          (!deleted || m_clientCapabilities.SupportsMediaUndelete()));
+}
+
+PVR_ERROR CPVRClient::GetMedia(CPVRMedia* results, bool deleted)
+{
+  return DoAddonCall(
+      __func__,
+      [this, results, deleted](const AddonInstance* addon) {
+        ADDON_HANDLE_STRUCT handle = {0};
+        handle.callerAddress = this;
+        handle.dataAddress = results;
+        return addon->toAddon->GetMedia(addon, &handle, deleted);
+      },
+      m_clientCapabilities.SupportsMedia() &&
+          (!deleted || m_clientCapabilities.SupportsMediaUndelete()));
+}
+
+PVR_ERROR CPVRClient::DeleteMediaTag(const CPVRMediaTag& mediaTag)
+{
+  return DoAddonCall(
+      __func__,
+      [&mediaTag](const AddonInstance* addon) {
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(mediaTag, tag);
+        return addon->toAddon->DeleteMediaTag(addon, &tag);
+      },
+      m_clientCapabilities.SupportsMedia() && m_clientCapabilities.SupportsMediaDelete());
+}
+
+PVR_ERROR CPVRClient::UndeleteMediaTag(const CPVRMediaTag& mediaTag)
+{
+  return DoAddonCall(
+      __func__,
+      [&mediaTag](const AddonInstance* addon) {
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(mediaTag, tag);
+        return addon->toAddon->UndeleteMediaTag(addon, &tag);
+      },
+      m_clientCapabilities.SupportsMediaUndelete());
+}
+
+PVR_ERROR CPVRClient::DeleteAllMediaFromTrash()
+{
+  return DoAddonCall(
+      __func__,
+      [](const AddonInstance* addon) { return addon->toAddon->DeleteAllMediaFromTrash(addon); },
+      m_clientCapabilities.SupportsMediaUndelete());
+}
+
+PVR_ERROR CPVRClient::RenameMediaTag(const CPVRMediaTag& mediaTag)
+{
+  return DoAddonCall(
+      __func__,
+      [&mediaTag](const AddonInstance* addon) {
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(mediaTag, tag);
+        return addon->toAddon->RenameMediaTag(addon, &tag);
+      },
+      m_clientCapabilities.SupportsMedia());
+}
+
+PVR_ERROR CPVRClient::SetMediaTagLifetime(const CPVRMediaTag& mediaTag)
+{
+  return DoAddonCall(
+      __func__,
+      [&mediaTag](const AddonInstance* addon) {
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(mediaTag, tag);
+        return addon->toAddon->SetMediaTagLifetime(addon, &tag);
+      },
+      m_clientCapabilities.SupportsMediaLifetimeChange());
+}
+
+PVR_ERROR CPVRClient::SetMediaTagPlayCount(const CPVRMediaTag& mediaTag, int count)
+{
+  return DoAddonCall(
+      __func__,
+      [&mediaTag, count](const AddonInstance* addon) {
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(mediaTag, tag);
+        return addon->toAddon->SetMediaTagPlayCount(addon, &tag, count);
+      },
+      m_clientCapabilities.SupportsMediaPlayCount());
+}
+
+PVR_ERROR CPVRClient::SetMediaTagLastPlayedPosition(const CPVRMediaTag& mediaTag,
+                                                    int lastplayedposition)
+{
+  return DoAddonCall(
+      __func__,
+      [&mediaTag, lastplayedposition](const AddonInstance* addon) {
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(mediaTag, tag);
+        return addon->toAddon->SetMediaTagLastPlayedPosition(addon, &tag, lastplayedposition);
+      },
+      m_clientCapabilities.SupportsMediaLastPlayedPosition());
+}
+
+PVR_ERROR CPVRClient::GetMediaTagLastPlayedPosition(const CPVRMediaTag& mediaTag, int& iPosition)
+{
+  iPosition = -1;
+  return DoAddonCall(
+      __func__,
+      [&mediaTag, &iPosition](const AddonInstance* addon) {
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(mediaTag, tag);
+        return addon->toAddon->GetMediaTagLastPlayedPosition(addon, &tag, &iPosition);
+      },
+      m_clientCapabilities.SupportsMediaLastPlayedPosition());
+}
+
+PVR_ERROR CPVRClient::GetMediaTagEdl(const CPVRMediaTag& mediaTag, std::vector<PVR_EDL_ENTRY>& edls)
+{
+  edls.clear();
+  return DoAddonCall(
+      __func__,
+      [&mediaTag, &edls](const AddonInstance* addon) {
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(mediaTag, tag);
+
+        PVR_EDL_ENTRY edl_array[PVR_ADDON_EDL_LENGTH];
+        int size = PVR_ADDON_EDL_LENGTH;
+        PVR_ERROR error = addon->toAddon->GetMediaTagEdl(addon, &tag, edl_array, &size);
+        if (error == PVR_ERROR_NO_ERROR)
+        {
+          edls.reserve(size);
+          for (int i = 0; i < size; ++i)
+            edls.emplace_back(edl_array[i]);
+        }
+        return error;
+      },
+      m_clientCapabilities.SupportsMediaEdl());
+}
+
+PVR_ERROR CPVRClient::GetMediaTagSize(const CPVRMediaTag& mediaTag, int64_t& sizeInBytes)
+{
+  return DoAddonCall(
+      __func__,
+      [&mediaTag, &sizeInBytes](const AddonInstance* addon) {
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(mediaTag, tag);
+        return addon->toAddon->GetMediaTagSize(addon, &tag, &sizeInBytes);
+      },
+      m_clientCapabilities.SupportsMediaSize());
+}
+
 PVR_ERROR CPVRClient::GetStreamReadChunkSize(int& iChunkSize)
 {
   return DoAddonCall(
@@ -1202,6 +1432,16 @@ PVR_ERROR CPVRClient::ReadRecordedStream(void* lpBuf, int64_t uiBufSize, int& iR
   });
 }
 
+PVR_ERROR CPVRClient::ReadMediaStream(void* lpBuf, int64_t uiBufSize, int& iRead)
+{
+  iRead = -1;
+  return DoAddonCall(__func__, [&lpBuf, uiBufSize, &iRead](const AddonInstance* addon) {
+    iRead = addon->toAddon->ReadMediaStream(addon, static_cast<unsigned char*>(lpBuf),
+                                            static_cast<int>(uiBufSize));
+    return (iRead == -1) ? PVR_ERROR_NOT_IMPLEMENTED : PVR_ERROR_NO_ERROR;
+  });
+}
+
 PVR_ERROR CPVRClient::SeekLiveStream(int64_t iFilePosition, int iWhence, int64_t& iPosition)
 {
   iPosition = -1;
@@ -1216,6 +1456,15 @@ PVR_ERROR CPVRClient::SeekRecordedStream(int64_t iFilePosition, int iWhence, int
   iPosition = -1;
   return DoAddonCall(__func__, [iFilePosition, iWhence, &iPosition](const AddonInstance* addon) {
     iPosition = addon->toAddon->SeekRecordedStream(addon, iFilePosition, iWhence);
+    return (iPosition == -1) ? PVR_ERROR_NOT_IMPLEMENTED : PVR_ERROR_NO_ERROR;
+  });
+}
+
+PVR_ERROR CPVRClient::SeekMediaStream(int64_t iFilePosition, int iWhence, int64_t& iPosition)
+{
+  iPosition = -1;
+  return DoAddonCall(__func__, [iFilePosition, iWhence, &iPosition](const AddonInstance* addon) {
+    iPosition = addon->toAddon->SeekMediaStream(addon, iFilePosition, iWhence);
     return (iPosition == -1) ? PVR_ERROR_NOT_IMPLEMENTED : PVR_ERROR_NO_ERROR;
   });
 }
@@ -1242,6 +1491,15 @@ PVR_ERROR CPVRClient::GetRecordedStreamLength(int64_t& iLength)
   iLength = -1;
   return DoAddonCall(__func__, [&iLength](const AddonInstance* addon) {
     iLength = addon->toAddon->LengthRecordedStream(addon);
+    return (iLength == -1) ? PVR_ERROR_NOT_IMPLEMENTED : PVR_ERROR_NO_ERROR;
+  });
+}
+
+PVR_ERROR CPVRClient::GetMediaStreamLength(int64_t& iLength)
+{
+  iLength = -1;
+  return DoAddonCall(__func__, [&iLength](const AddonInstance* addon) {
+    iLength = addon->toAddon->LengthMediaStream(addon);
     return (iLength == -1) ? PVR_ERROR_NOT_IMPLEMENTED : PVR_ERROR_NO_ERROR;
   });
 }
@@ -1302,6 +1560,29 @@ PVR_ERROR CPVRClient::GetRecordingStreamProperties(const std::shared_ptr<CPVRRec
 
     PVR_ERROR error = addon->toAddon->GetRecordingStreamProperties(addon, &tag, properties.get(),
                                                                    &iPropertyCount);
+    if (error == PVR_ERROR_NO_ERROR)
+      WriteStreamProperties(properties.get(), iPropertyCount, props);
+
+    return error;
+  });
+}
+
+PVR_ERROR CPVRClient::GetMediaTagStreamProperties(const std::shared_ptr<CPVRMediaTag>& mediaTag,
+                                               CPVRStreamProperties& props)
+{
+  return DoAddonCall(__func__, [this, &mediaTag, &props](const AddonInstance* addon) {
+    if (!m_clientCapabilities.SupportsMedia())
+      return PVR_ERROR_NO_ERROR; // no error, but no need to obtain the values from the addon
+
+    PVR_MEDIA_TAG tag = {{0}};
+    WriteClientMediaTagInfo(*mediaTag, tag);
+
+    unsigned int iPropertyCount = STREAM_MAX_PROPERTY_COUNT;
+    std::unique_ptr<PVR_NAMED_VALUE[]> properties(new PVR_NAMED_VALUE[iPropertyCount]);
+    memset(properties.get(), 0, iPropertyCount * sizeof(PVR_NAMED_VALUE));
+
+    PVR_ERROR error =
+        addon->toAddon->GetMediaTagStreamProperties(addon, &tag, properties.get(), &iPropertyCount);
     if (error == PVR_ERROR_NO_ERROR)
       WriteStreamProperties(properties.get(), iPropertyCount, props);
 
@@ -1464,6 +1745,25 @@ PVR_ERROR CPVRClient::OpenRecordedStream(const std::shared_ptr<CPVRRecording>& r
       m_clientCapabilities.SupportsRecordings());
 }
 
+PVR_ERROR CPVRClient::OpenMediaStream(const std::shared_ptr<CPVRMediaTag>& mediaTag)
+{
+  if (!mediaTag)
+    return PVR_ERROR_INVALID_PARAMETERS;
+
+  return DoAddonCall(
+      __func__,
+      [this, mediaTag](const AddonInstance* addon) {
+        CloseMediaStream();
+
+        PVR_MEDIA_TAG tag;
+        WriteClientMediaTagInfo(*mediaTag, tag);
+        CLog::LogFC(LOGDEBUG, LOGPVR, "Opening stream for mediaTag '{}'", mediaTag->m_strTitle);
+        return addon->toAddon->OpenMediaStream(addon, &tag) ? PVR_ERROR_NO_ERROR
+                                                            : PVR_ERROR_NOT_IMPLEMENTED;
+      },
+      m_clientCapabilities.SupportsMedia());
+}
+
 PVR_ERROR CPVRClient::CloseLiveStream()
 {
   return DoAddonCall(__func__, [](const AddonInstance* addon) {
@@ -1476,6 +1776,14 @@ PVR_ERROR CPVRClient::CloseRecordedStream()
 {
   return DoAddonCall(__func__, [](const AddonInstance* addon) {
     addon->toAddon->CloseRecordedStream(addon);
+    return PVR_ERROR_NO_ERROR;
+  });
+}
+
+PVR_ERROR CPVRClient::CloseMediaStream()
+{
+  return DoAddonCall(__func__, [](const AddonInstance* addon) {
+    addon->toAddon->CloseMediaStream(addon);
     return PVR_ERROR_NO_ERROR;
   });
 }
@@ -1617,6 +1925,23 @@ PVR_ERROR CPVRClient::CallRecordingMenuHook(const CPVRClientMenuHook& hook,
     menuHook.iLocalizedStringId = hook.GetLabelId();
 
     return addon->toAddon->CallRecordingMenuHook(addon, &menuHook, &tag);
+  });
+}
+
+PVR_ERROR CPVRClient::CallMediaTagMenuHook(const CPVRClientMenuHook& hook,
+                                           const std::shared_ptr<CPVRMediaTag>& mediaTag,
+                                           bool bDeleted)
+{
+  return DoAddonCall(__func__, [&hook, &mediaTag, &bDeleted](const AddonInstance* addon) {
+    PVR_MEDIA_TAG tag;
+    WriteClientMediaTagInfo(*mediaTag, tag);
+
+    PVR_MENUHOOK menuHook;
+    menuHook.category = bDeleted ? PVR_MENUHOOK_DELETED_MEDIA_TAG : PVR_MENUHOOK_MEDIA_TAG;
+    menuHook.iHookId = hook.GetId();
+    menuHook.iLocalizedStringId = hook.GetLabelId();
+
+    return addon->toAddon->CallMediaTagMenuHook(addon, &menuHook, &tag);
   });
 }
 
@@ -1858,6 +2183,29 @@ void CPVRClient::cb_transfer_timer_entry(void* kodiInstance,
   kodiTimers->UpdateFromClient(transferTimer);
 }
 
+void CPVRClient::cb_transfer_media_entry(void* kodiInstance,
+                                         const ADDON_HANDLE handle,
+                                         const PVR_MEDIA_TAG* mediaTag)
+{
+  if (!handle)
+  {
+    CLog::LogF(LOGERROR, "Invalid handler data");
+    return;
+  }
+
+  CPVRClient* client = static_cast<CPVRClient*>(kodiInstance);
+  CPVRMedia* kodiMedia = static_cast<CPVRMedia*>(handle->dataAddress);
+  if (!mediaTag || !client || !kodiMedia)
+  {
+    CLog::LogF(LOGERROR, "Invalid handler data");
+    return;
+  }
+
+  /* transfer this entry to the media container */
+  std::shared_ptr<CPVRMediaTag> transferMediaTag(new CPVRMediaTag(*mediaTag, client->GetID()));
+  kodiMedia->UpdateFromClient(transferMediaTag, *client);
+}
+
 void CPVRClient::cb_add_menu_hook(void* kodiInstance, const PVR_MENUHOOK* hook)
 {
   CPVRClient* client = static_cast<CPVRClient*>(kodiInstance);
@@ -1921,6 +2269,12 @@ void CPVRClient::cb_trigger_recording_update(void* kodiInstance)
 {
   /* update the recordings table in the next iteration of the pvrmanager's main loop */
   CServiceBroker::GetPVRManager().TriggerRecordingsUpdate();
+}
+
+void CPVRClient::cb_trigger_media_update(void* kodiInstance)
+{
+  /* update the mediaTag table in the next iteration of the pvrmanager's main loop */
+  CServiceBroker::GetPVRManager().TriggerMediaUpdate();
 }
 
 void CPVRClient::cb_trigger_channel_groups_update(void* kodiInstance)

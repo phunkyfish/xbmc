@@ -42,6 +42,8 @@ namespace PVR
   class CPVRRecording;
   class CPVRRecordings;
   class CPVRTimers;
+  class CPVRMediaTag;
+  class CPVRMedia;
 
   enum class PVREvent
   {
@@ -69,6 +71,9 @@ namespace PVR
     AnnounceReminder,
     Timers,
     TimersInvalidated,
+
+    // Media events
+    MediaInvalidated,
 
     // EPG events
     Epg,
@@ -129,6 +134,12 @@ namespace PVR
     std::shared_ptr<CPVRTimers> Timers() const;
 
     /*!
+     * @brief Get the media container.
+     * @return The media container.
+     */
+    std::shared_ptr<CPVRMedia> Media() const;
+
+    /*!
      * @brief Get the timers container.
      * @return The timers container.
      */
@@ -136,7 +147,8 @@ namespace PVR
 
     /*!
      * @brief Get the instance of a client that matches the given item.
-     * @param item The item containing a PVR recording, a PVR channel, a PVR timer or a PVR EPG event.
+     * @param item The item containing a PVR recording, a PVR channel, a PVR timer,
+     *              a PVR EPG event or a PVR mediaTag.
      * @return the requested client on success, nullptr otherwise.
      */
     std::shared_ptr<CPVRClient> GetClient(const CFileItem& item) const;
@@ -287,6 +299,11 @@ namespace PVR
     void TriggerTimersUpdate();
 
     /*!
+     * @brief Let the background thread update the media list.
+     */
+    void TriggerMediaUpdate();
+
+    /*!
      * @brief Let the background thread update the channel list.
      */
     void TriggerChannelsUpdate();
@@ -374,14 +391,15 @@ namespace PVR
     bool SetWakeupCommand();
 
     /*!
-     * @brief Load at least one client and load all other PVR data (channelgroups, timers, recordings) after loading the client.
+     * @brief Load at least one client and load all other PVR data (channelgroups, timers,
+     *        recordings, media) after loading the client.
      * @param progressHandler The progress handler to use for showing the different load stages.
      * @return If at least one client and all pvr data was loaded, false otherwise.
      */
     bool LoadComponents(CPVRGUIProgressHandler* progressHandler);
 
     /*!
-     * @brief Unload all PVR data (recordings, timers, channelgroups).
+     * @brief Unload all PVR data (media, recordings, timers, channelgroups).
      */
     void UnloadComponents();
 
@@ -430,6 +448,7 @@ namespace PVR
     std::shared_ptr<CPVRChannelGroupsContainer> m_channelGroups; /*!< pointer to the channel groups container */
     std::shared_ptr<CPVRRecordings> m_recordings; /*!< pointer to the recordings container */
     std::shared_ptr<CPVRTimers> m_timers; /*!< pointer to the timers container */
+    std::shared_ptr<CPVRMedia> m_media; /*!< pointer to the media container */
     std::shared_ptr<CPVRClients> m_addons; /*!< pointer to the pvr addon container */
     std::unique_ptr<CPVRGUIInfo> m_guiInfo; /*!< pointer to the guiinfo data */
     std::shared_ptr<CPVRGUIActions> m_guiActions; /*!< pointer to the pvr gui actions */

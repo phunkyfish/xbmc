@@ -187,6 +187,8 @@ void CGUIWindowSystemInfo::FrameMove()
     SetControlLabel(i++, "%s: %s", 19163, PVR_BACKEND_RECORDINGS);
     SetControlLabel(i++, "%s: %s", 19168, PVR_BACKEND_DELETED_RECORDINGS);  // Deleted and recoverable recordings
     SetControlLabel(i++, "%s: %s", 19025, PVR_BACKEND_TIMERS);
+    SetControlLabel(i++, "%s: %s", 14211, PVR_BACKEND_MEDIA);
+    SetControlLabel(i++, "%s: %s", 19354, PVR_BACKEND_DELETED_MEDIA);  // Deleted and recoverable media
   }
 
   else if (m_section == CONTROL_BT_POLICY)
@@ -198,7 +200,7 @@ void CGUIWindowSystemInfo::FrameMove()
 
 void CGUIWindowSystemInfo::ResetLabels()
 {
-  for (int i = 2; i < 13; i++)
+  for (int i = 2; i < 16; i++)
   {
     SET_CONTROL_LABEL(i, "");
   }

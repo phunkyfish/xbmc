@@ -34,7 +34,7 @@
 	<constant name="dialogbuttons_itemgap">-20</constant>
 	<constant name="list_y_offset">0</constant>
 	<constant name="list_item_height">80</constant>
-	<expression name="infodialog_active">Window.IsActive(musicinformation) | Window.IsActive(songinformation) | Window.IsActive(movieinformation) | Window.IsActive(addoninformation) | Window.IsActive(pvrguideinfo) | Window.IsActive(pvrrecordinginfo) | Window.IsActive(pictureinfo) | Window.IsVisible(script-embuary-video.xml) | Window.IsVisible(script-embuary-person.xml) | Window.IsVisible(script-embuary-image.xml)</expression>
+	<expression name="infodialog_active">Window.IsActive(musicinformation) | Window.IsActive(songinformation) | Window.IsActive(movieinformation) | Window.IsActive(addoninformation) | Window.IsActive(pvrguideinfo) | Window.IsActive(pvrrecordinginfo) | Window.IsActive(pvrmediataginfo) | Window.IsActive(pictureinfo) | Window.IsVisible(script-embuary-video.xml) | Window.IsVisible(script-embuary-person.xml) | Window.IsVisible(script-embuary-image.xml)</expression>
 	<expression name="sidebar_visible">ControlGroup(9000).HasFocus | Control.HasFocus(6130) | Control.HasFocus(6131)</expression>
 	<include name="CommonScrollbars">
 		<control type="group">
@@ -1088,7 +1088,7 @@
 			<label>$INFO[Container.FolderName, / ]</label>
 			<include>BreadcrumbsLabel</include>
 			<visible>![Container.Content() + Window.IsActive(videos)]</visible>
-			<visible>![Window.IsActive(MyPVRChannels.xml) | Window.IsActive(MyPVRTimers.xml) | Window.IsActive(MyPVRRecordings.xml) | Window.IsActive(MyPVRSearch.xml)]</visible>
+			<visible>![Window.IsActive(MyPVRChannels.xml) | Window.IsActive(MyPVRTimers.xml) | Window.IsActive(MyPVRRecordings.xml) | Window.IsActive(MyPVRMedia.xml) | Window.IsActive(MyPVRSearch.xml)]</visible>
 		</control>
 		<control type="label">
 			<label>$INFO[Container.PluginCategory, / ]</label>

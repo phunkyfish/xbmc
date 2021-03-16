@@ -28,6 +28,8 @@
 #include "pvr/guilib/guiinfo/PVRGUIInfo.h"
 #include "pvr/providers/PVRProvider.h"
 #include "pvr/providers/PVRProviders.h"
+#include "pvr/media/PVRMedia.h"
+#include "pvr/media/PVRMediaTag.h"
 #include "pvr/recordings/PVRRecording.h"
 #include "pvr/recordings/PVRRecordings.h"
 #include "pvr/timers/PVRTimerInfoTag.h"
@@ -178,6 +180,7 @@ CPVRManager::CPVRManager() :
     m_channelGroups(new CPVRChannelGroupsContainer),
     m_recordings(new CPVRRecordings),
     m_timers(new CPVRTimers),
+    m_media(new CPVRMedia),
     m_addons(new CPVRClients),
     m_guiInfo(new CPVRGUIInfo),
     m_guiActions(new CPVRGUIActions),
@@ -256,6 +259,12 @@ std::shared_ptr<CPVRTimers> CPVRManager::Timers() const
   return m_timers;
 }
 
+std::shared_ptr<CPVRMedia> CPVRManager::Media() const
+{
+  CSingleLock lock(m_critSection);
+  return m_media;
+}
+
 std::shared_ptr<CPVRClients> CPVRManager::Clients() const
 {
   // note: m_addons is const (only set/reset in ctor/dtor). no need for a lock here.
@@ -272,6 +281,8 @@ std::shared_ptr<CPVRClient> CPVRManager::GetClient(const CFileItem& item) const
     iClientID = item.GetPVRRecordingInfoTag()->m_iClientId;
   else if (item.HasPVRTimerInfoTag())
     iClientID = item.GetPVRTimerInfoTag()->m_iClientId;
+  else if (item.HasPVRMediaInfoTag())
+    iClientID = item.GetPVRMediaInfoTag()->m_iClientId;
   else if (item.HasEPGInfoTag())
     iClientID = item.GetEPGInfoTag()->ClientID();
   else if (URIUtils::IsPVRChannel(item.GetPath()))
@@ -285,6 +296,12 @@ std::shared_ptr<CPVRClient> CPVRManager::GetClient(const CFileItem& item) const
     const std::shared_ptr<CPVRRecording> recording = m_recordings->GetByPath(item.GetPath());
     if (recording)
       iClientID = recording->ClientID();
+  }
+  else if (URIUtils::IsPVRMediaTag(item.GetPath()))
+  {
+    const std::shared_ptr<CPVRMediaTag> mediaTag = m_media->GetByPath(item.GetPath());
+    if (mediaTag)
+      iClientID = mediaTag->ClientID();
   }
   return GetClient(iClientID);
 }
@@ -324,6 +341,7 @@ void CPVRManager::Clear()
   CSingleLock lock(m_critSection);
 
   m_guiInfo.reset();
+  m_media.reset();
   m_timers.reset();
   m_recordings.reset();
   m_providers.reset();
@@ -344,6 +362,7 @@ void CPVRManager::ResetProperties()
   m_channelGroups.reset(new CPVRChannelGroupsContainer);
   m_recordings.reset(new CPVRRecordings);
   m_timers.reset(new CPVRTimers);
+  m_media.reset(new CPVRMedia);
   m_guiInfo.reset(new CPVRGUIInfo);
   m_parentalTimer.reset(new CStopWatch);
 }
@@ -631,6 +650,7 @@ void CPVRManager::OnWake()
   TriggerRecordingsUpdate();
   TriggerEpgsCreate();
   TriggerTimersUpdate();
+  TriggerMediaUpdate();
 }
 
 bool CPVRManager::LoadComponents(CPVRGUIProgressHandler* progressHandler)
@@ -668,6 +688,12 @@ bool CPVRManager::LoadComponents(CPVRGUIProgressHandler* progressHandler)
 
   m_recordings->Load();
 
+  /* get recordings from the backend */
+  if (progressHandler)
+    progressHandler->UpdateProgress(g_localizeStrings.Get(19238), 80); // Loading media from clients
+
+  m_media->Load();
+
   if (!IsInitialising())
     return false;
 
@@ -680,6 +706,7 @@ bool CPVRManager::LoadComponents(CPVRGUIProgressHandler* progressHandler)
 
 void CPVRManager::UnloadComponents()
 {
+  m_media->Unload();
   m_recordings->Unload();
   m_timers->Unload();
   m_channelGroups->Unload();
@@ -805,6 +832,11 @@ void CPVRManager::TriggerTimersUpdate()
   m_pendingUpdates->Append("pvr-update-timers", [this]() {
     return Timers()->Update();
   });
+}
+
+void CPVRManager::TriggerMediaUpdate()
+{
+  m_pendingUpdates->Append("pvr-update-media", [this]() { return Media()->Update(); });
 }
 
 void CPVRManager::TriggerChannelsUpdate()

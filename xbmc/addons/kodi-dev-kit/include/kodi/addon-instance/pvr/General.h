@@ -149,7 +149,17 @@ public:
   /// | **Supports descramble info** | `boolean` | @ref PVRCapabilities::SetSupportsDescrambleInfo "SetSupportsDescrambleInfo" | @ref PVRCapabilities::GetSupportsDescrambleInfo "GetSupportsDescrambleInfo"
   /// | **Supports async EPG transfer** | `boolean` | @ref PVRCapabilities::SetSupportsAsyncEPGTransfer "SetSupportsAsyncEPGTransfer" | @ref PVRCapabilities::GetSupportsAsyncEPGTransfer "GetSupportsAsyncEPGTransfer"
   /// | **Supports recording size** | `boolean` | @ref PVRCapabilities::SetSupportsRecordingSize "SetSupportsRecordingSize" | @ref PVRCapabilities::GetSupportsRecordingSize "GetSupportsRecordingSize"
+  /// | **Supports media** | `boolean` | @ref PVRCapabilities::SetSupportsMedia "SetSupportsMedia" | @ref PVRCapabilities::GetSupportsMedia "GetSupportsMedia"
+  /// | **Supports media delete** | `boolean` | @ref PVRCapabilities::SetSupportsMediaDelete "SetSupportsMediaDelete" | @ref PVRCapabilities::GetSupportsMediaDelete "SetSupportsMediaDelete"
+  /// | **Supports media undelete** | `boolean` | @ref PVRCapabilities::SetSupportsMediaUndelete "SetSupportsMediaUndelete" | @ref PVRCapabilities::GetSupportsMediaUndelete "SetSupportsMediaUndelete"
+  /// | **Supports mediaTag play count** | `boolean` | @ref PVRCapabilities::SetSupportsMediaTagPlayCount "SetSupportsMediaTagPlayCount" | @ref PVRCapabilities::GetSupportsMediaTagPlayCount "GetSupportsMediaTagPlayCount"
+  /// | **Supports last played position** | `boolean` | @ref PVRCapabilities::SetSupportsLastPlayedPosition "SetSupportsLastPlayedPosition" | @ref PVRCapabilities::GetSupportsLastPlayedPosition "GetSupportsLastPlayedPosition"
+  /// | **Supports mediaTag EDL** | `boolean` | @ref PVRCapabilities::SetSupportsMediaTagEdl "SetSupportsMediaTagEdl" | @ref PVRCapabilities::GetSupportsMediaTagEdl "GetSupportsMediaTagEdl"
+  /// | **Supports media rename** | `boolean` | @ref PVRCapabilities::SetSupportsMediaRename "SetSupportsMediaRename" | @ref PVRCapabilities::GetSupportsMediaRename "GetSupportsMediaRename"
+  /// | **Supports media lifetime change** | `boolean` | @ref PVRCapabilities::SetSupportsMediaLifetimeChange "SetSupportsMediaLifetimeChange" | @ref PVRCapabilities::GetSupportsMediaLifetimeChange "GetSupportsMediaLifetimeChange"
+  /// | **Supports mediaTag size** | `boolean` | @ref PVRCapabilities::SetSupportsMediaTagSize "SetSupportsMediaTagSize" | @ref PVRCapabilities::GetSupportsMediaTagSize "GetSupportsMediaTagSize"
   /// | **Recordings lifetime values** | @ref cpp_kodi_addon_pvr_Defs_PVRTypeIntValue "PVRTypeIntValue" | @ref PVRCapabilities::SetRecordingsLifetimeValues "SetRecordingsLifetimeValues" | @ref PVRCapabilities::GetRecordingsLifetimeValues "GetRecordingsLifetimeValues"
+
   ///
   /// @warning This class can not be used outside of @ref kodi::addon::CInstancePVRClient::GetCapabilities()
   ///
@@ -364,6 +374,97 @@ public:
 
   /// @brief To get with @ref SetSupportsRecordingSize changed values.
   bool GetSupportsRecordingSize() const { return m_capabilities->bSupportsRecordingSize; }
+
+  /// @brief **true** if this add-on supports playback of recordings stored on
+  /// the backend.
+  void SetSupportsMedia(bool supportsMedia)
+  {
+    m_capabilities->bSupportsMedia = supportsMedia;
+  }
+
+  /// @brief To get with @ref SetSupportsMedia changed values.
+  bool GetSupportsMedia() const { return m_capabilities->bSupportsMedia; }
+
+  /// @brief Set **true** if this add-on supports undelete of media stored
+  /// on the backend.
+  void SetSupportsMediaDelete(bool supportsMediaDelete)
+  {
+    m_capabilities->bSupportsMediaDelete = supportsMediaDelete;
+  }
+
+  /// @brief To get with @ref SetSupportsMediaDelete changed values.
+  bool GetSupportsMediaDelete() const { return m_capabilities->bSupportsMediaDelete; }
+
+  /// @brief Set **true** if this add-on supports undelete of media stored
+  /// on the backend.
+  void SetSupportsMediaUndelete(bool supportsMediaUndelete)
+  {
+    m_capabilities->bSupportsMediaUndelete = supportsMediaUndelete;
+  }
+
+  /// @brief To get with @ref SetSupportsMediaUndelete changed values.
+  bool GetSupportsMediaUndelete() const { return m_capabilities->bSupportsMediaUndelete; }
+
+    /// @brief Set **true** if the backend supports renaming media.
+  void SetSupportsMediaRename(bool supportsMediaRename)
+  {
+    m_capabilities->bSupportsMediaRename = supportsMediaRename;
+  }
+
+  /// @brief Set **true** if the backend supports play count for media.
+  void SetSupportsMediaTagPlayCount(bool supportsMediaTagPlayCount)
+  {
+    m_capabilities->bSupportsMediaTagPlayCount = supportsMediaTagPlayCount;
+  }
+
+  /// @brief To get with @ref SetSupportsMediaTagPlayCount changed values.
+  bool GetSupportsMediaTagPlayCount() const { return m_capabilities->bSupportsMediaTagPlayCount; }
+
+  /// @brief Set **true** if the backend supports store/retrieve of last played
+  /// position for mediaTag.
+ void SetSupportsMediaTagLastPlayedPosition(bool supportsMediaTagLastPlayedPosition)
+  {
+    m_capabilities->bSupportsMediaTagLastPlayedPosition = supportsMediaTagLastPlayedPosition;
+  }
+
+  /// @brief To get with @ref SetSupportsMediaTagLastPlayedPosition changed values.
+  bool GetSupportsMediaTagLastPlayedPosition() const { return m_capabilities->bSupportsMediaTagLastPlayedPosition; }
+
+  /// @brief Set **true** if the backend supports retrieving an edit decision
+  /// list for media.
+  void SetSupportsMediaTagEdl(bool supportsMediaTagEdl)
+  {
+    m_capabilities->bSupportsMediaTagEdl = supportsMediaTagEdl;
+  }
+
+  /// @brief To get with @ref SetSupportsMediaTagEdl changed values.
+  bool GetSupportsMediaTagEdl() const { return m_capabilities->bSupportsMediaTagEdl; }
+
+  /// @brief To get with @ref SetSupportsMediaRename changed values.
+  bool GetSupportsMediaRename() const { return m_capabilities->bSupportsMediaRename; }
+
+  /// @brief Set **true** if the backend supports changing lifetime for
+  /// media.
+  void SetSupportsMediaLifetimeChange(bool supportsMediaLifetimeChange)
+  {
+    m_capabilities->bSupportsMediaLifetimeChange = supportsMediaLifetimeChange;
+  }
+
+  /// @brief To get with @ref SetSupportsMediaLifetimeChange changed
+  /// values.
+  bool GetSupportsMediaLifetimeChange() const
+  {
+    return m_capabilities->bSupportsMediaLifetimeChange;
+  }
+
+  /// @brief Set **true** if this addon-on supports retrieving size of media.
+  void SetSupportsMediaTagSize(bool supportsMediaTagSize)
+  {
+    m_capabilities->bSupportsMediaTagSize = supportsMediaTagSize;
+  }
+
+  /// @brief To get with @ref SetSupportsMediaTagSize changed values.
+  bool GetSupportsMediaTagSize() const { return m_capabilities->bSupportsMediaTagSize; }
 
   /// @brief **optional**\n
   /// Set array containing the possible values for @ref PVRRecording::SetLifetime().

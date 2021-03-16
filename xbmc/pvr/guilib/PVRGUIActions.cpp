@@ -44,12 +44,17 @@
 #include "pvr/channels/PVRChannelGroupsContainer.h"
 #include "pvr/dialogs/GUIDialogPVRChannelGuide.h"
 #include "pvr/dialogs/GUIDialogPVRGuideInfo.h"
+#include "pvr/dialogs/GUIDialogPVRMediaTagInfo.h"
+#include "pvr/dialogs/GUIDialogPVRMediaTagSettings.h"
 #include "pvr/dialogs/GUIDialogPVRRecordingInfo.h"
 #include "pvr/dialogs/GUIDialogPVRRecordingSettings.h"
 #include "pvr/dialogs/GUIDialogPVRTimerSettings.h"
 #include "pvr/epg/EpgContainer.h"
 #include "pvr/epg/EpgDatabase.h"
 #include "pvr/epg/EpgInfoTag.h"
+#include "pvr/media/PVRMedia.h"
+#include "pvr/media/PVRMediaPath.h"
+#include "pvr/media/PVRMediaTag.h"
 #include "pvr/recordings/PVRRecording.h"
 #include "pvr/recordings/PVRRecordings.h"
 #include "pvr/recordings/PVRRecordingsPath.h"
@@ -218,6 +223,146 @@ namespace PVR
     }
   };
 
+  class AsyncMediaTagAction : private IRunnable
+  {
+  public:
+    bool Execute(const CFileItemPtr& item);
+
+  protected:
+    AsyncMediaTagAction() = default;
+
+  private:
+    // IRunnable implementation
+    void Run() override;
+
+    // the worker function
+    virtual bool DoRun(const CFileItemPtr& item) = 0;
+
+    CFileItemPtr m_item;
+    bool m_bSuccess = false;
+  };
+
+  bool AsyncMediaTagAction::Execute(const CFileItemPtr& item)
+  {
+    m_item = item;
+    CGUIDialogBusy::Wait(this, 100, false);
+    return m_bSuccess;
+  }
+
+  void AsyncMediaTagAction::Run()
+  {
+    m_bSuccess = DoRun(m_item);
+
+    if (m_bSuccess)
+      CServiceBroker::GetPVRManager().TriggerMediaUpdate();
+  }
+
+  class AsyncRenameMediaTag : public AsyncMediaTagAction
+  {
+  public:
+    explicit AsyncRenameMediaTag(const std::string& strNewName) : m_strNewName(strNewName) {}
+
+  private:
+    bool DoRun(const std::shared_ptr<CFileItem>& item) override
+    {
+      if (item->IsUsablePVRMediaTag())
+      {
+        return item->GetPVRMediaInfoTag()->Rename(m_strNewName);
+      }
+      else
+      {
+        CLog::LogF(LOGERROR, "Cannot rename item '{}': no valid mediaTag tag", item->GetPath());
+        return false;
+      }
+    }
+    std::string m_strNewName;
+  };
+
+  class AsyncDeleteMediaTag : public AsyncMediaTagAction
+  {
+  public:
+    explicit AsyncDeleteMediaTag(bool bWatchedOnly = false) : m_bWatchedOnly(bWatchedOnly) {}
+
+  private:
+    bool DoRun(const std::shared_ptr<CFileItem>& item) override
+    {
+      CFileItemList items;
+      if (item->m_bIsFolder)
+      {
+        CUtil::GetRecursiveListing(item->GetPath(), items, "", XFILE::DIR_FLAG_NO_FILE_INFO);
+      }
+      else
+      {
+        items.Add(item);
+      }
+
+      bool bReturn = true;
+      for (const auto& itemToDelete : items)
+      {
+        if (itemToDelete->IsUsablePVRMediaTag() &&
+            (!m_bWatchedOnly || itemToDelete->GetPVRMediaInfoTag()->GetPlayCount() > 0))
+          bReturn &= itemToDelete->GetPVRMediaInfoTag()->Delete();
+      }
+      return bReturn;
+    }
+    bool m_bWatchedOnly = false;
+  };
+
+  class AsyncEmptyMediaTrash : public AsyncMediaTagAction
+  {
+  private:
+    bool DoRun(const std::shared_ptr<CFileItem>& item) override
+    {
+      return CServiceBroker::GetPVRManager().Clients()->DeleteAllMediaFromTrash() ==
+             PVR_ERROR_NO_ERROR;
+    }
+  };
+
+  class AsyncUndeleteMediaTag : public AsyncMediaTagAction
+  {
+  private:
+    bool DoRun(const std::shared_ptr<CFileItem>& item) override
+    {
+      if (item->IsDeletedPVRMediaTag())
+      {
+        return item->GetPVRMediaInfoTag()->Undelete();
+      }
+      else
+      {
+        CLog::LogF(LOGERROR, "Cannot undelete item '{}': no valid mediaTag tag", item->GetPath());
+        return false;
+      }
+    }
+  };
+
+  class AsyncSetMediaTagPlayCount : public AsyncMediaTagAction
+  {
+  private:
+    bool DoRun(const CFileItemPtr& item) override
+    {
+      const std::shared_ptr<CPVRClient> client = CServiceBroker::GetPVRManager().GetClient(*item);
+      if (client)
+      {
+        const std::shared_ptr<CPVRMediaTag> mediaTag = item->GetPVRMediaInfoTag();
+        return client->SetMediaTagPlayCount(*mediaTag, mediaTag->GetLocalPlayCount()) ==
+               PVR_ERROR_NO_ERROR;
+      }
+      return false;
+    }
+  };
+
+  class AsyncSetMediaTagLifetime : public AsyncMediaTagAction
+  {
+  private:
+    bool DoRun(const CFileItemPtr& item) override
+    {
+      const std::shared_ptr<CPVRClient> client = CServiceBroker::GetPVRManager().GetClient(*item);
+      if (client)
+        return client->SetMediaTagLifetime(*item->GetPVRMediaInfoTag()) == PVR_ERROR_NO_ERROR;
+      return false;
+    }
+  };
+
   CPVRGUIActions::CPVRGUIActions()
     : m_settings({CSettings::SETTING_LOOKANDFEEL_STARTUPACTION,
                   CSettings::SETTING_PVRMANAGER_PRESELECTPLAYINGCHANNEL,
@@ -294,6 +439,28 @@ namespace PVR
     }
 
     pDlgInfo->SetRecording(item.get());
+    pDlgInfo->Open();
+    return true;
+  }
+
+  bool CPVRGUIActions::ShowMediaTagInfo(const CFileItemPtr& item) const
+  {
+    if (!item->IsPVRMediaTag())
+    {
+      CLog::LogF(LOGERROR, "No recording!");
+      return false;
+    }
+
+    CGUIDialogPVRMediaTagInfo* pDlgInfo =
+        CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogPVRMediaTagInfo>(
+            WINDOW_DIALOG_PVR_MEDIA_TAG_INFO);
+    if (!pDlgInfo)
+    {
+      CLog::LogF(LOGERROR, "Unable to get WINDOW_DIALOG_PVR_MEDIA_TAG__INFO!");
+      return false;
+    }
+
+    pDlgInfo->SetMediaTag(item.get());
     pDlgInfo->Open();
     return true;
   }
@@ -1158,13 +1325,31 @@ namespace PVR
   {
     std::string resumeString;
 
-    const std::shared_ptr<CPVRRecording> recording(CPVRItem(CFileItemPtr(new CFileItem(item))).GetRecording());
-    if (recording && !recording->IsDeleted())
+    if (item.IsPVRRecording())
     {
-      int positionInSeconds = lrint(recording->GetResumePoint().timeInSeconds);
-      if (positionInSeconds > 0)
-        resumeString = StringUtils::Format(g_localizeStrings.Get(12022).c_str(),
-                                           StringUtils::SecondsToTimeString(positionInSeconds, TIME_FORMAT_HH_MM_SS).c_str());
+      const std::shared_ptr<CPVRRecording> recording(
+          CPVRItem(CFileItemPtr(new CFileItem(item))).GetRecording());
+      if (recording && !recording->IsDeleted())
+      {
+        int positionInSeconds = lrint(recording->GetResumePoint().timeInSeconds);
+        if (positionInSeconds > 0)
+          resumeString = StringUtils::Format(
+              g_localizeStrings.Get(12022).c_str(),
+              StringUtils::SecondsToTimeString(positionInSeconds, TIME_FORMAT_HH_MM_SS).c_str());
+      }
+    }
+    else
+    {
+      const std::shared_ptr<CPVRMediaTag> mediaTag(
+          CPVRItem(CFileItemPtr(new CFileItem(item))).GetMediaTag());
+      if (mediaTag && !mediaTag->IsDeleted())
+      {
+        int positionInSeconds = lrint(mediaTag->GetResumePoint().timeInSeconds);
+        if (positionInSeconds > 0)
+          resumeString = StringUtils::Format(
+              g_localizeStrings.Get(12022).c_str(),
+              StringUtils::SecondsToTimeString(positionInSeconds, TIME_FORMAT_HH_MM_SS).c_str());
+      }
     }
     return resumeString;
   }
@@ -1205,6 +1390,192 @@ namespace PVR
     return PlayRecording(item, false);
   }
 
+  bool CPVRGUIActions::EditMediaTag(const CFileItemPtr& item) const
+  {
+    const std::shared_ptr<CPVRMediaTag> mediaTag = CPVRItem(item).GetMediaTag();
+    if (!mediaTag)
+    {
+      CLog::LogF(LOGERROR, "No mediaTag!");
+      return false;
+    }
+
+    std::shared_ptr<CPVRMediaTag> origMediaTag(new CPVRMediaTag);
+    origMediaTag->Update(*mediaTag,
+                         *CServiceBroker::GetPVRManager().GetClient(mediaTag->m_iClientId));
+
+    if (!ShowMediaTagSettings(mediaTag))
+      return false;
+
+    if (origMediaTag->m_strTitle != mediaTag->m_strTitle)
+    {
+      if (!AsyncRenameMediaTag(mediaTag->m_strTitle).Execute(item))
+        CLog::LogF(LOGERROR, "Renaming mediaTag failed!");
+    }
+
+    if (origMediaTag->GetLocalPlayCount() != mediaTag->GetLocalPlayCount())
+    {
+      if (!AsyncSetMediaTagPlayCount().Execute(item))
+        CLog::LogF(LOGERROR, "Setting mediaTag playcount failed!");
+    }
+
+    return true;
+  }
+
+  bool CPVRGUIActions::CanEditMediaTag(const CFileItem& item) const
+  {
+    return CGUIDialogPVRMediaTagSettings::CanEditMediaTag(item);
+  }
+
+  bool CPVRGUIActions::DeleteMediaTag(const CFileItemPtr& item) const
+  {
+    if ((!item->IsPVRMediaTag() && !item->m_bIsFolder) || item->IsParentFolder())
+      return false;
+
+    if (!ConfirmDeleteMediaTag(item))
+      return false;
+
+    if (!AsyncDeleteMediaTag().Execute(item))
+    {
+      HELPERS::ShowOKDialogText(
+          CVariant{257},
+          CVariant{
+              19111}); // "Error", "PVR backend error. Check the log for more information about this message."
+      return false;
+    }
+
+    return true;
+  }
+
+  bool CPVRGUIActions::ConfirmDeleteMediaTag(const CFileItemPtr& item) const
+  {
+    return CGUIDialogYesNo::ShowAndGetInput(
+        CVariant{122}, // "Confirm delete"
+        item->m_bIsFolder
+            ? CVariant{19113} // "Delete all media in this folder?"
+            : item->GetPVRMediaInfoTag()->IsDeleted()
+                  ? CVariant{19294}
+                  // "Remove this deleted mediaTag from trash? This operation cannot be reverted."
+                  : CVariant{19112}, // "Delete this mediaTag?"
+        CVariant{""}, CVariant{item->GetLabel()});
+  }
+
+  bool CPVRGUIActions::DeleteWatchedMedia(const std::shared_ptr<CFileItem>& item) const
+  {
+    if (!item->m_bIsFolder || item->IsParentFolder())
+      return false;
+
+    if (!ConfirmDeleteWatchedMedia(item))
+      return false;
+
+    if (!AsyncDeleteMediaTag(true).Execute(item))
+    {
+      HELPERS::ShowOKDialogText(
+          CVariant{257},
+          CVariant{
+              19111}); // "Error", "PVR backend error. Check the log for more information about this message."
+      return false;
+    }
+
+    return true;
+  }
+
+  bool CPVRGUIActions::ConfirmDeleteWatchedMedia(const std::shared_ptr<CFileItem>& item) const
+  {
+    return CGUIDialogYesNo::ShowAndGetInput(
+        CVariant{122}, // "Confirm delete"
+        CVariant{19328}, // "Delete all watched media in this folder?"
+        CVariant{""}, CVariant{item->GetLabel()});
+  }
+
+  bool CPVRGUIActions::DeleteAllMediaFromTrash() const
+  {
+    if (!ConfirmDeleteAllMediaFromTrash())
+      return false;
+
+    if (!AsyncEmptyMediaTrash().Execute(CFileItemPtr()))
+      return false;
+
+    return true;
+  }
+
+  bool CPVRGUIActions::ConfirmDeleteAllMediaFromTrash() const
+  {
+    return CGUIDialogYesNo::ShowAndGetInput(
+        CVariant{19292}, // "Delete all permanently"
+        CVariant{
+            19293}); // "Remove all deleted media from trash? This operation cannot be reverted."
+  }
+
+  bool CPVRGUIActions::UndeleteMediaTag(const CFileItemPtr& item) const
+  {
+    if (!item->IsDeletedPVRMediaTag())
+      return false;
+
+    if (!AsyncUndeleteMediaTag().Execute(item))
+    {
+      HELPERS::ShowOKDialogText(
+          CVariant{257},
+          CVariant{
+              19111}); // "Error", "PVR backend error. Check the log for more information about this message."
+      return false;
+    }
+
+    return true;
+  }
+
+  bool CPVRGUIActions::ShowMediaTagSettings(const std::shared_ptr<CPVRMediaTag>& mediaTag) const
+  {
+    CGUIDialogPVRMediaTagSettings* pDlgInfo =
+        CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogPVRMediaTagSettings>(
+            WINDOW_DIALOG_PVR_MEDIA_TAG_SETTING);
+    if (!pDlgInfo)
+    {
+      CLog::LogF(LOGERROR, "Unable to get WINDOW_DIALOG_PVR_MEDIA_TAG_SETTING!");
+      return false;
+    }
+
+    pDlgInfo->SetMediaTag(mediaTag);
+    pDlgInfo->Open();
+
+    return pDlgInfo->IsConfirmed();
+  }
+
+  bool CPVRGUIActions::CheckResumeMediaTag(const CFileItemPtr& item) const
+  {
+    bool bPlayIt(true);
+    std::string resumeString(GetResumeLabel(*item));
+    if (!resumeString.empty())
+    {
+      CContextButtons choices;
+      choices.Add(CONTEXT_BUTTON_RESUME_ITEM, resumeString);
+      choices.Add(CONTEXT_BUTTON_PLAY_ITEM, 12021); // Play from beginning
+      int choice = CGUIDialogContextMenu::ShowAndGetChoice(choices);
+      if (choice > 0)
+        item->m_lStartOffset = choice == CONTEXT_BUTTON_RESUME_ITEM ? STARTOFFSET_RESUME : 0;
+      else
+        bPlayIt = false; // context menu cancelled
+    }
+    return bPlayIt;
+  }
+
+  bool CPVRGUIActions::ResumePlayMediaTag(const CFileItemPtr& item, bool bFallbackToPlay) const
+  {
+    bool bCanResume = !GetResumeLabel(*item).empty();
+    if (bCanResume)
+    {
+      item->m_lStartOffset = STARTOFFSET_RESUME;
+    }
+    else
+    {
+      if (bFallbackToPlay)
+        item->m_lStartOffset = 0;
+      else
+        return false;
+    }
+
+    return PlayMediaTag(item, false);
+  }
+
   void CPVRGUIActions::CheckAndSwitchToFullscreen(bool bFullscreen) const
   {
     CMediaSettings::GetInstance().SetMediaStartWindowed(!bFullscreen);
@@ -1238,6 +1609,10 @@ namespace PVR
       else if (item->IsPVRRecording())
       {
         client->GetRecordingStreamProperties(item->GetPVRRecordingInfoTag(), props);
+      }
+      else if (item->IsPVRMediaTag())
+      {
+        client->GetMediaTagStreamProperties(item->GetPVRMediaInfoTag(), props);
       }
       else if (item->IsEPG())
       {
@@ -1285,6 +1660,29 @@ namespace PVR
     if (!bCheckResume || CheckResumeRecording(item))
     {
       CFileItem* itemToPlay = new CFileItem(recording);
+      itemToPlay->m_lStartOffset = item->m_lStartOffset;
+      StartPlayback(itemToPlay, true);
+    }
+    return true;
+  }
+
+  bool CPVRGUIActions::PlayMediaTag(const CFileItemPtr& item, bool bCheckResume) const
+  {
+    const std::shared_ptr<CPVRMediaTag> mediaTag(CPVRItem(item).GetMediaTag());
+    if (!mediaTag)
+      return false;
+
+    if (CServiceBroker::GetPVRManager().PlaybackState()->IsPlayingMediaTag(mediaTag))
+    {
+      CGUIMessage msg(GUI_MSG_FULLSCREEN, 0,
+                      CServiceBroker::GetGUI()->GetWindowManager().GetActiveWindow());
+      CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
+      return true;
+    }
+
+    if (!bCheckResume || CheckResumeMediaTag(item))
+    {
+      CFileItem* itemToPlay = new CFileItem(mediaTag);
       itemToPlay->m_lStartOffset = item->m_lStartOffset;
       StartPlayback(itemToPlay, true);
     }
@@ -1517,6 +1915,8 @@ namespace PVR
       pvrItem = std::make_shared<CFileItem>(CServiceBroker::GetPVRManager().ChannelGroups()->GetByPath(item->GetPath()));
     else if (URIUtils::IsPVRRecording(item->GetPath()) && !item->HasPVRRecordingInfoTag())
       pvrItem = std::make_shared<CFileItem>(CServiceBroker::GetPVRManager().Recordings()->GetByPath(item->GetPath()));
+    else if (URIUtils::IsPVRMediaTag(item->GetPath()) && !item->HasPVRMediaInfoTag())
+      pvrItem = std::make_shared<CFileItem>(CServiceBroker::GetPVRManager().Media()->GetByPath(item->GetPath()));
 
     bool bCheckResume = true;
     if (item->HasProperty("check_resume"))
@@ -1529,6 +1929,10 @@ namespace PVR
     else if (pvrItem && pvrItem->HasPVRRecordingInfoTag())
     {
       return PlayRecording(pvrItem, bCheckResume);
+    }
+    else if (pvrItem && pvrItem->HasPVRMediaInfoTag())
+    {
+      return PlayMediaTag(pvrItem, bCheckResume);
     }
 
     return false;

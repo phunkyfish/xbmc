@@ -12,6 +12,7 @@
 #include "ServiceBroker.h"
 #include "pvr/PVRManager.h"
 #include "pvr/addons/PVRClients.h"
+#include "pvr/media/PVRMediaPath.h"
 #include "pvr/recordings/PVRRecordingsPath.h"
 #include "pvr/timers/PVRTimersPath.h"
 #include "settings/AdvancedSettings.h"
@@ -65,6 +66,34 @@ void CGUIViewStateWindowPVRRecordings::SaveViewState()
 bool CGUIViewStateWindowPVRRecordings::HideParentDirItems()
 {
   return (CGUIViewState::HideParentDirItems() || CPVRRecordingsPath(m_items.GetPath()).IsRecordingsRoot());
+}
+
+CGUIViewStateWindowPVRMedia::CGUIViewStateWindowPVRMedia(const int windowId, const CFileItemList& items) : CGUIViewStatePVR(windowId, items)
+{
+  AddSortMethod(SortByLabel, 551, LABEL_MASKS("%L", "%d", "%L", ""),    // "Name"     : Filename, DateTime | Foldername, empty
+                CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING)
+                  ? SortAttributeIgnoreArticle
+                  : SortAttributeNone);
+  AddSortMethod(SortByDate,  552, LABEL_MASKS("%L", "%d", "%L", "%d")); // "Date"     : Filename, DateTime | Foldername, DateTime
+  AddSortMethod(SortByTime,  180, LABEL_MASKS("%L", "%D", "%L", ""));   // "Duration" : Filename, Duration | Foldername, empty
+  AddSortMethod(SortByFile,  561, LABEL_MASKS("%L", "%d", "%L", ""));   // "File"     : Filename, DateTime | Foldername, empty
+  if (CServiceBroker::GetPVRManager().Clients()->AnyClientSupportingMediaSize())
+    AddSortMethod(SortBySize,  553, LABEL_MASKS("%L", "%I", "%L", "%I")); // "Size"   : Filename, DateTime | Foldername, empty
+
+  SetSortMethod(CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()
+                ->m_PVRDefaultSortOrder);
+
+  LoadViewState(items.GetPath(), m_windowId);
+}
+
+void CGUIViewStateWindowPVRMedia::SaveViewState()
+{
+  SaveViewToDb(m_items.GetPath(), m_windowId, CViewStateSettings::GetInstance().Get("pvrmedia"));
+}
+
+bool CGUIViewStateWindowPVRMedia::HideParentDirItems()
+{
+  return (CGUIViewState::HideParentDirItems() || CPVRMediaPath(m_items.GetPath()).IsMediaRoot());
 }
 
 CGUIViewStateWindowPVRGuide::CGUIViewStateWindowPVRGuide(const int windowId, const CFileItemList& items) : CGUIViewStatePVR(windowId, items)

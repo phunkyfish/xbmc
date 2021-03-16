@@ -34,6 +34,7 @@ namespace PVR
   class CPVRRecordings;
   class CPVRTimerType;
   class CPVRTimersContainer;
+  class CPVRMedia;
 
   typedef std::map<int, std::shared_ptr<CPVRClient>> CPVRClientMap;
 
@@ -48,6 +49,8 @@ namespace PVR
     int numTimers = 0;
     int numRecordings = 0;
     int numDeletedRecordings = 0;
+    int numMedia = 0;
+    int numDeletedMedia = 0;
     int numProviders = 0;
     int numChannelGroups = 0;
     int numChannels = 0;
@@ -224,6 +227,26 @@ namespace PVR
 
     //@}
 
+    /*! @name MediaTag methods */
+    //@{
+
+    /*!
+     * @brief Get all media from clients
+     * @param media Store the media in this container.
+     * @param deleted If true, return deleted media, return not deleted media otherwise.
+     * @param failedClients in case of errors will contain the ids of the clients for which the media could not be obtained.
+     * @return PVR_ERROR_NO_ERROR if the operation succeeded, the respective PVR_ERROR value otherwise.
+     */
+    PVR_ERROR GetMedia(CPVRMedia* media, bool deleted, std::vector<int>& failedClients);
+
+    /*!
+     * @brief Delete all "soft" deleted media permanently on the backend.
+     * @return PVR_ERROR_NO_ERROR if the operation succeeded, the respective PVR_ERROR value otherwise.
+     */
+    PVR_ERROR DeleteAllMediaFromTrash();
+
+    //@}
+
     /*! @name EPG methods */
     //@{
 
@@ -313,6 +336,12 @@ namespace PVR
     bool AnyClientSupportingRecordingsSize() const;
 
     /*!
+     * @brief Get whether or not any client supports mediaTag size.
+     * @return True if any client supports mediaTag size.
+     */
+    bool AnyClientSupportingMediaSize() const;
+
+    /*!
      * @brief Get whether or not any client supports EPG.
      * @return True if any client supports EPG.
      */
@@ -323,6 +352,13 @@ namespace PVR
      * @return True if any client supports recordings.
      */
     bool AnyClientSupportingRecordings() const;
+    //@}
+
+    /*!
+     * @brief Get whether or not any client supports media.
+     * @return True if any client supports media.
+     */
+    bool AnyClientSupportingMedia() const;
     //@}
 
     /*! @name Power management methods */

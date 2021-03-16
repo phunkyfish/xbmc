@@ -1046,7 +1046,8 @@ bool URIUtils::IsLiveTV(const std::string& strFile)
   RemoveSlashAtEnd(strFileWithoutSlash);
 
   if (StringUtils::EndsWithNoCase(strFileWithoutSlash, ".pvr") &&
-      !StringUtils::StartsWith(strFileWithoutSlash, "pvr://recordings"))
+      (!StringUtils::StartsWith(strFileWithoutSlash, "pvr://recordings") &&
+       !StringUtils::StartsWith(strFileWithoutSlash, "pvr://media")))
     return true;
 
   return false;
@@ -1064,6 +1065,20 @@ bool URIUtils::IsPVRRecording(const std::string& strFile)
 bool URIUtils::IsPVRRecordingFileOrFolder(const std::string& strFile)
 {
   return StringUtils::StartsWith(strFile, "pvr://recordings");
+}
+
+bool URIUtils::IsPVRMediaTag(const std::string& strFile)
+{
+  std::string strFileWithoutSlash(strFile);
+  RemoveSlashAtEnd(strFileWithoutSlash);
+
+  return StringUtils::EndsWithNoCase(strFileWithoutSlash, ".pvr") &&
+         StringUtils::StartsWith(strFile, "pvr://media");
+}
+
+bool URIUtils::IsPVRMediaTagFileOrFolder(const std::string& strFile)
+{
+  return StringUtils::StartsWith(strFile, "pvr://media");
 }
 
 bool URIUtils::IsMusicDb(const std::string& strFile)

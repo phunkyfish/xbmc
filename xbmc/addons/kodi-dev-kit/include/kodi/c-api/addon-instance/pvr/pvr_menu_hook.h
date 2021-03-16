@@ -50,6 +50,12 @@ extern "C"
 
     /// @brief __6__ : For settings.
     PVR_MENUHOOK_SETTING = 6,
+
+    /// @brief __7__ : For media tags.
+    PVR_MENUHOOK_MEDIA_TAG = 7,
+
+    /// @brief __8__ : For deleted media tags.
+    PVR_MENUHOOK_DELETED_MEDIA_TAG = 8,
   } PVR_MENUHOOK_CAT;
   ///@}
   //----------------------------------------------------------------------------
