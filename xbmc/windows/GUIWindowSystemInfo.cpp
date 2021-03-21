@@ -181,6 +181,8 @@ void CGUIWindowSystemInfo::FrameMove()
     SetControlLabel(i++, "%s: %s", 19114, PVR_BACKEND_VERSION);
     SetControlLabel(i++, "%s: %s", 19115, PVR_BACKEND_HOST);
     SetControlLabel(i++, "%s: %s", 19116, PVR_BACKEND_DISKSPACE);
+    SetControlLabel(i++, "%s: %s", 19041, PVR_BACKEND_PROVIDERS);
+    SetControlLabel(i++, "%s: %s", 19042, PVR_BACKEND_CHANNEL_GROUPS);
     SetControlLabel(i++, "%s: %s", 19019, PVR_BACKEND_CHANNELS);
     SetControlLabel(i++, "%s: %s", 19163, PVR_BACKEND_RECORDINGS);
     SetControlLabel(i++, "%s: %s", 19168, PVR_BACKEND_DELETED_RECORDINGS);  // Deleted and recoverable recordings

@@ -19,6 +19,8 @@ namespace PVR
   class CPVRChannel;
   class CPVRChannelGroup;
   class CPVRChannelGroups;
+  class CPVRProvider;
+  class CPVRProviders;
   class CPVRClient;
   class CPVRTimerInfoTag;
   class CPVRTimers;
@@ -61,7 +63,7 @@ namespace PVR
      * @brief Get the minimal database version that is required to operate correctly.
      * @return The minimal database version.
      */
-    int GetSchemaVersion() const override { return 37; }
+    int GetSchemaVersion() const override { return 38; }
 
     /*!
      * @brief Get the default sqlite database filename.
@@ -130,6 +132,39 @@ namespace PVR
      * @return The amount of channels that were added.
      */
     int Get(CPVRChannelGroup& results, bool bCompressDB);
+
+    //@}
+
+    /*! @name Channel provider methods */
+    //@{
+
+    /*!
+     * @brief Remove all providers from the database.
+     * @return True if all providers were removed, false otherwise.
+     */
+    bool DeleteProviders();
+
+    /*!
+     * @brief Add or update a provider entry in the database
+     * @param provider The provider to persist.
+     * @param updateRecord True if record to be updated, false for insert
+     * @return True when persisted, false otherwise.
+     */
+    bool Persist(CPVRProvider& provider, bool updateRecord = false);
+
+    /*!
+     * @brief Remove a provider entry from the database
+     * @param provider The provider to remove.
+     * @return True if the provider was removed, false otherwise.
+     */
+    bool Delete(const CPVRProvider& provider);
+
+    /*!
+     * @brief Get the list of providers from the database
+     * @param results The providers to store the results in.
+     * @return The amount of providers that were added.
+     */
+    bool Get(CPVRProviders& results);
 
     //@}
 

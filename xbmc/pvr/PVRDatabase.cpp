@@ -14,6 +14,8 @@
 #include "pvr/channels/PVRChannel.h"
 #include "pvr/channels/PVRChannelGroup.h"
 #include "pvr/channels/PVRChannelGroups.h"
+#include "pvr/providers/PVRProvider.h"
+#include "pvr/providers/PVRProviders.h"
 #include "pvr/timers/PVRTimerInfoTag.h"
 #include "pvr/timers/PVRTimerType.h"
 #include "settings/AdvancedSettings.h"
@@ -61,6 +63,18 @@ namespace
       "iMaxRecordings     integer,"
       "iRecordingGroup    integer"
   ")";
+
+  static const std::string sqlCreateProvidersTable =
+    "CREATE TABLE providers ("
+      "idProvider           integer primary key, "
+      "iUniqueId            integer, "
+      "iClientId            integer, "
+      "sProviderName        varchar(64), "
+      "iProviderType        integer, "
+      "sIconPath            varchar(255), "
+      "sCountry             varchar(64), "
+      "sLanguage            varchar(64) "
+    ")";
 } // unnamed namespace
 
 bool CPVRDatabase::Open()
@@ -109,7 +123,8 @@ void CPVRDatabase::CreateTables()
         "iLastWatched         integer, "
         "iClientId            integer, " //! @todo use mapping table
         "idEpg                integer, "
-        "bHasArchive          bool"
+        "bHasArchive          bool, "
+        "iClientProviderUid   integer "
       ")"
   );
 
@@ -148,6 +163,9 @@ void CPVRDatabase::CreateTables()
 
   CLog::LogFC(LOGDEBUG, LOGPVR, "Creating table 'timers'");
   m_pDS->exec(sqlCreateTimersTable);
+
+  CLog::LogFC(LOGDEBUG, LOGPVR, "Creating table 'providers'");
+  m_pDS->exec(sqlCreateProvidersTable);
 }
 
 void CPVRDatabase::CreateAnalytics()
@@ -229,6 +247,15 @@ void CPVRDatabase::UpdateTables(int iVersion)
 
   if (iVersion < 37)
     m_pDS->exec("ALTER TABLE channelgroups ADD iLastOpened integer");
+
+  if (iVersion < 38)
+  {
+    m_pDS->exec(sqlCreateProvidersTable);
+    m_pDS->exec(
+        "CREATE UNIQUE INDEX idx_iUniqueId_iClientId on providers(iUniqueId, iClientId);");
+    m_pDS->exec("ALTER TABLE channels ADD iClientProviderUid integer");
+    m_pDS->exec("UPDATE channels SET iClientProviderUid = -1");
+  }
 }
 
 /********** Client methods **********/
@@ -289,6 +316,116 @@ int CPVRDatabase::GetPriority(const CPVRClient& client)
   return atoi(strValue.c_str());
 }
 
+/********** Channel provider methods **********/
+
+bool CPVRDatabase::DeleteProviders()
+{
+  CLog::LogFC(LOGDEBUG, LOGPVR, "Deleting all providers from the database");
+
+  CSingleLock lock(m_critSection);
+  return DeleteValues("providers");
+}
+
+bool CPVRDatabase::Persist(CPVRProvider& provider, bool updateRecord /* = false */)
+{
+  bool bReturn = false;
+  if (provider.GetProviderName().empty())
+  {
+    CLog::LogF(LOGERROR, "Empty provider name");
+    return bReturn;
+  }
+
+  std::string strQuery;
+
+  CSingleLock lock(m_critSection);
+  {
+    /* insert a new entry when this is a new group, or replace the existing one otherwise */
+    if (!updateRecord)
+      strQuery = PrepareSQL(
+          "INSERT INTO providers (idProvider, iUniqueId, iClientId, sProviderName, "
+          "iProviderType, sIconPath, sCountry, sLanguage) "
+          "VALUES (%i, %i, %i, '%s', %i, '%s', '%s', '%s');",
+          provider.GetDatabaseId(), provider.GetUniqueId(), provider.GetClientId(),
+          provider.GetProviderName().c_str(), static_cast<int>(provider.GetProviderType()),
+          provider.GetIconPath().c_str(), provider.GetCountriesDBString().c_str(),
+          provider.GetLanguagesDBString().c_str());
+    else
+      strQuery = PrepareSQL(
+          "REPLACE INTO providers (idProvider, iUniqueId, iClientId, sProviderName, "
+          "iProviderType, sIconPath, sCountry, sLanguage) "
+          "VALUES (%i, %i, %i, '%s', %i, '%s', '%s', '%s');",
+          provider.GetDatabaseId(), provider.GetUniqueId(), provider.GetClientId(),
+          provider.GetProviderName().c_str(), static_cast<int>(provider.GetProviderType()),
+          provider.GetIconPath().c_str(), provider.GetCountriesDBString().c_str(),
+          provider.GetLanguagesDBString().c_str());
+
+    bReturn = ExecuteQuery(strQuery);
+
+    /* set the provider id if it was <= 0 */
+    if (bReturn && provider.GetDatabaseId() <= 0)
+    {
+      provider.SetDatabaseId(static_cast<int>(m_pDS->lastinsertid()));
+    }
+  }
+
+  return bReturn;
+}
+
+bool CPVRDatabase::Delete(const CPVRProvider& provider)
+{
+  CLog::LogFC(LOGDEBUG, LOGPVR, "Deleting provider '{}' from the database",
+              provider.GetProviderName());
+
+  CSingleLock lock(m_critSection);
+
+  Filter filter;
+  filter.AppendWhere(PrepareSQL("idProvider = '%i'", provider.GetDatabaseId()));
+
+  return DeleteValues("providers", filter);
+}
+
+bool CPVRDatabase::Get(CPVRProviders& results)
+{
+  bool bReturn = false;
+  CSingleLock lock(m_critSection);
+
+  const std::string strQuery = PrepareSQL("SELECT * from providers");
+  if (ResultQuery(strQuery))
+  {
+    try
+    {
+      while (!m_pDS->eof())
+      {
+        std::shared_ptr<CPVRProvider> provider = std::make_shared<CPVRProvider>(
+            m_pDS->fv("iUniqueId").get_asInt(), m_pDS->fv("iClientId").get_asInt());
+
+        provider->SetDatabaseId(m_pDS->fv("idProvider").get_asInt());
+        provider->SetProviderName(m_pDS->fv("sProviderName").get_asString());
+        provider->SetProviderType(
+            static_cast<PVR_PROVIDER_TYPE>(m_pDS->fv("iProviderType").get_asInt()));
+        provider->SetIconPath(m_pDS->fv("sIconPath").get_asString());
+        provider->SetCountriesFromDBString(m_pDS->fv("sCountry").get_asString());
+        provider->SetLanguagesFromDBString(m_pDS->fv("sLanguage").get_asString());
+
+        results.CheckAndAddEntry(provider, ProviderUpdateMode::BY_DATABASE);
+
+        CLog::LogFC(LOGDEBUG, LOGPVR, "Channel Provider '{}' loaded from PVR database",
+                    provider->GetProviderName());
+        m_pDS->next();
+      }
+
+      m_pDS->close();
+      bReturn = true;
+    }
+    catch (...)
+    {
+      CLog::LogF(LOGERROR, "Couldn't load providers from PVR database");
+    }
+  }
+
+  return bReturn;
+}
+
 /********** Channel methods **********/
 
 bool CPVRDatabase::DeleteChannels()
@@ -321,13 +458,19 @@ bool CPVRDatabase::QueueDeleteQuery(const CPVRChannel& channel)
 int CPVRDatabase::Get(CPVRChannelGroup& results, bool bCompressDB)
 {
   int iReturn = 0;
-  std::string strQuery = PrepareSQL("SELECT channels.idChannel, channels.iUniqueId, channels.bIsRadio, channels.bIsHidden, channels.bIsUserSetIcon, channels.bIsUserSetName, "
-      "channels.sIconPath, channels.sChannelName, channels.bIsVirtual, channels.bEPGEnabled, channels.sEPGScraper, channels.iLastWatched, channels.iClientId, channels.bIsLocked, "
-      "map_channelgroups_channels.iChannelNumber, map_channelgroups_channels.iSubChannelNumber, map_channelgroups_channels.iOrder, map_channelgroups_channels.iClientChannelNumber, "
-      "map_channelgroups_channels.iClientSubChannelNumber, channels.idEpg, channels.bHasArchive "
+  std::string strQuery = PrepareSQL(
+      "SELECT channels.idChannel, channels.iUniqueId, channels.bIsRadio, channels.bIsHidden, "
+      "channels.bIsUserSetIcon, channels.bIsUserSetName, "
+      "channels.sIconPath, channels.sChannelName, channels.bIsVirtual, channels.bEPGEnabled, "
+      "channels.sEPGScraper, channels.iLastWatched, channels.iClientId, channels.bIsLocked, "
+      "map_channelgroups_channels.iChannelNumber, map_channelgroups_channels.iSubChannelNumber, "
+      "map_channelgroups_channels.iOrder, map_channelgroups_channels.iClientChannelNumber, "
+      "map_channelgroups_channels.iClientSubChannelNumber, channels.idEpg, channels.bHasArchive, "
+      "channels.iClientProviderUid "
       "FROM map_channelgroups_channels "
       "LEFT JOIN channels ON channels.idChannel = map_channelgroups_channels.idChannel "
-      "WHERE map_channelgroups_channels.idGroup = %u", results.GroupID());
+      "WHERE map_channelgroups_channels.idGroup = %u",
+      results.GroupID());
 
   CSingleLock lock(m_critSection);
   if (ResultQuery(strQuery))
@@ -353,6 +496,8 @@ int CPVRDatabase::Get(CPVRChannelGroup& results, bool bCompressDB)
         channel->m_iClientId = m_pDS->fv("iClientId").get_asInt();
         channel->m_iEpgId = m_pDS->fv("idEpg").get_asInt();
         channel->m_bHasArchive = m_pDS->fv("bHasArchive").get_asBool();
+        channel->m_iClientProviderUid = m_pDS->fv("iClientProviderUid").get_asInt();
+
         channel->UpdateEncryptionName();
 
         auto newMember = std::make_shared<PVRChannelGroupMember>(channel,
@@ -870,27 +1015,34 @@ bool CPVRDatabase::Persist(CPVRChannel& channel, bool bCommit)
   if (strValue.empty())
   {
     /* new channel */
-    strQuery = PrepareSQL("INSERT INTO channels ("
+    strQuery = PrepareSQL(
+        "INSERT INTO channels ("
         "iUniqueId, bIsRadio, bIsHidden, bIsUserSetIcon, bIsUserSetName, bIsLocked, "
         "sIconPath, sChannelName, bIsVirtual, bEPGEnabled, sEPGScraper, iLastWatched, iClientId, "
-        "idEpg, bHasArchive) "
-        "VALUES (%i, %i, %i, %i, %i, %i, '%s', '%s', %i, %i, '%s', %u, %i, %i, %i)",
-        channel.UniqueID(), (channel.IsRadio() ? 1 :0), (channel.IsHidden() ? 1 : 0), (channel.IsUserSetIcon() ? 1 : 0), (channel.IsUserSetName() ? 1 : 0), (channel.IsLocked() ? 1 : 0),
-        channel.IconPath().c_str(), channel.ChannelName().c_str(), 0, (channel.EPGEnabled() ? 1 : 0), channel.EPGScraper().c_str(), static_cast<unsigned int>(channel.LastWatched()), channel.ClientID(),
-        channel.EpgID(), channel.HasArchive());
+        "idEpg, bHasArchive, iClientProviderUid) "
+        "VALUES (%i, %i, %i, %i, %i, %i, '%s', '%s', %i, %i, '%s', %u, %i, %i, %i, %i)",
+        channel.UniqueID(), (channel.IsRadio() ? 1 : 0), (channel.IsHidden() ? 1 : 0),
+        (channel.IsUserSetIcon() ? 1 : 0), (channel.IsUserSetName() ? 1 : 0),
+        (channel.IsLocked() ? 1 : 0), channel.IconPath().c_str(), channel.ChannelName().c_str(), 0,
+        (channel.EPGEnabled() ? 1 : 0), channel.EPGScraper().c_str(),
+        static_cast<unsigned int>(channel.LastWatched()), channel.ClientID(), channel.EpgID(),
+        channel.HasArchive(), channel.ClientProviderUid());
   }
   else
   {
     /* update channel */
-    strQuery = PrepareSQL("REPLACE INTO channels ("
+    strQuery = PrepareSQL(
+        "REPLACE INTO channels ("
         "iUniqueId, bIsRadio, bIsHidden, bIsUserSetIcon, bIsUserSetName, bIsLocked, "
         "sIconPath, sChannelName, bIsVirtual, bEPGEnabled, sEPGScraper, iLastWatched, iClientId, "
-        "idChannel, idEpg, bHasArchive) "
-        "VALUES (%i, %i, %i, %i, %i, %i, '%s', '%s', %i, %i, '%s', %u, %i, %s, %i, %i)",
-        channel.UniqueID(), (channel.IsRadio() ? 1 :0), (channel.IsHidden() ? 1 : 0), (channel.IsUserSetIcon() ? 1 : 0), (channel.IsUserSetName() ? 1 : 0), (channel.IsLocked() ? 1 : 0),
-        channel.IconPath().c_str(), channel.ChannelName().c_str(), 0, (channel.EPGEnabled() ? 1 : 0), channel.EPGScraper().c_str(), static_cast<unsigned int>(channel.LastWatched()), channel.ClientID(),
-        strValue.c_str(),
-        channel.EpgID(), channel.HasArchive());
+        "idChannel, idEpg, bHasArchive, iClientProviderUid) "
+        "VALUES (%i, %i, %i, %i, %i, %i, '%s', '%s', %i, %i, '%s', %u, %i, %s, %i, %i, %i)",
+        channel.UniqueID(), (channel.IsRadio() ? 1 : 0), (channel.IsHidden() ? 1 : 0),
+        (channel.IsUserSetIcon() ? 1 : 0), (channel.IsUserSetName() ? 1 : 0),
+        (channel.IsLocked() ? 1 : 0), channel.IconPath().c_str(), channel.ChannelName().c_str(), 0,
+        (channel.EPGEnabled() ? 1 : 0), channel.EPGScraper().c_str(),
+        static_cast<unsigned int>(channel.LastWatched()), channel.ClientID(), strValue.c_str(),
+        channel.EpgID(), channel.HasArchive(), channel.ClientProviderUid());
   }
 
   if (QueueInsertQuery(strQuery))
