@@ -9,6 +9,7 @@
 #pragma once
 
 #include "addons/kodi-dev-kit/include/kodi/c-api/addon-instance/pvr/pvr_channels.h"
+#include "addons/kodi-dev-kit/include/kodi/c-api/addon-instance/pvr/pvr_providers.h"
 #include "pvr/channels/PVRChannelNumber.h"
 #include "threads/CriticalSection.h"
 #include "utils/ISerializable.h"
@@ -25,6 +26,7 @@ namespace PVR
 {
   enum class PVREvent;
 
+  class CPVRProvider;
   class CPVREpg;
   class CPVREpgInfoTag;
   class CPVRRadioRDSInfoTag;
@@ -447,6 +449,18 @@ namespace PVR
     void SetClientOrder(int iOrder);
 
     /*!
+     * @brief Get the client provider Uid for this channel
+     * @return m_iClientProviderUid The provider Uid for this channel
+     */
+    int ClientProviderUid() const { return m_iClientProviderUid; }
+
+    /*!
+     * @brief Get the client provider name for this channel
+     * @return m_strClientProviderName The name for this channel's provider
+     */
+    std::string ClientProviderName() const { return m_strClientProviderName; }
+
+    /*!
      * @brief CEventStream callback for PVR events.
      * @param event The event.
      */
@@ -461,6 +475,27 @@ namespace PVR
      * @brief Unlock the instance. Other threads may get access to this channel again.
      */
     void Unlock() { m_critSection.unlock(); }
+
+    /*!
+     * @brief Get the default provider of this channel. The default
+     *        provider represents the PVR add-on itself.
+     * @return The default provider of this channel
+     */
+    std::shared_ptr<CPVRProvider> GetDefaultProvider() const;
+
+    /*!
+     * @brief Whether or not this channel has provider set by the client.
+     * @return True if a provider was set by the client, false otherwise.
+     */
+    bool HasClientProvider() const;
+
+    /*!
+     * @brief Get the provider of this channel. This may be the default provider or a
+     *        custom provider set by the client. If @ref "HasClientProvider()" returns true
+     *        the provider will be custom from the client, otherwise the default provider.
+     * @return The provider of this channel
+     */
+    std::shared_ptr<CPVRProvider> GetProvider() const;
 
     //@}
   private:
@@ -518,6 +553,8 @@ namespace PVR
     int m_iClientEncryptionSystem = -1; /*!< the encryption system used by this channel. 0 for FreeToAir, -1 for unknown */
     std::string m_strClientEncryptionName; /*!< the name of the encryption system used by this channel */
     int m_iOrder = 0; /*!< the order from this channels currently selected group memeber */
+    int m_iClientProviderUid = PVR_PROVIDER_INVALID_UID; /*!< the unique id for this provider from the client */
+    std::string m_strClientProviderName; /*!< the name for channel's provider from the client */
     //@}
 
     mutable CCriticalSection m_critSection;

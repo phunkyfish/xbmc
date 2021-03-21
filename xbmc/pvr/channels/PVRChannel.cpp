@@ -19,6 +19,7 @@
 #include "pvr/epg/EpgChannelData.h"
 #include "pvr/epg/EpgContainer.h"
 #include "pvr/epg/EpgInfoTag.h"
+#include "pvr/providers/PVRProviders.h"
 #include "threads/SingleLock.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
@@ -41,13 +42,13 @@ bool CPVRChannel::operator!=(const CPVRChannel& right) const
   return !(*this == right);
 }
 
-CPVRChannel::CPVRChannel()
+CPVRChannel::CPVRChannel() : m_iClientProviderUid(PVR_PROVIDER_INVALID_UID)
 {
   UpdateEncryptionName();
 }
 
 CPVRChannel::CPVRChannel(bool bRadio)
-  : m_bIsRadio(bRadio)
+  : m_bIsRadio(bRadio), m_iClientProviderUid(PVR_PROVIDER_INVALID_UID)
 {
   UpdateEncryptionName();
 }
@@ -64,7 +65,9 @@ CPVRChannel::CPVRChannel(const PVR_CHANNEL& channel, unsigned int iClientId)
     m_clientChannelNumber(channel.iChannelNumber, channel.iSubChannelNumber),
     m_strClientChannelName(channel.strChannelName),
     m_strMimeType(channel.strMimeType),
-    m_iClientEncryptionSystem(channel.iEncryptionSystem)
+    m_iClientEncryptionSystem(channel.iEncryptionSystem),
+    m_iClientProviderUid(channel.iClientProviderUid),
+    m_strClientProviderName(channel.strProviderName)
 {
   if (m_strChannelName.empty())
     m_strChannelName = StringUtils::Format("%s %d", g_localizeStrings.Get(19029).c_str(), m_iUniqueId);
@@ -193,13 +196,17 @@ bool CPVRChannel::UpdateFromClient(const std::shared_ptr<CPVRChannel>& channel)
       m_strMimeType != channel->MimeType() ||
       m_iClientEncryptionSystem != channel->EncryptionSystem() ||
       m_strClientChannelName != channel->ClientChannelName() ||
-      m_bHasArchive != channel->HasArchive())
+      m_bHasArchive != channel->HasArchive() ||
+      m_iClientProviderUid != channel->ClientProviderUid() ||
+      m_strClientProviderName != channel->ClientProviderName())
   {
     m_clientChannelNumber = channel->m_clientChannelNumber;
     m_strMimeType = channel->MimeType();
     m_iClientEncryptionSystem = channel->EncryptionSystem();
     m_strClientChannelName = channel->ClientChannelName();
     m_bHasArchive = channel->HasArchive();
+    m_iClientProviderUid = channel->ClientProviderUid();
+    m_strClientProviderName = channel->ClientProviderName();
 
     UpdateEncryptionName();
 
@@ -834,4 +841,22 @@ void CPVRChannel::SetClientOrder(int iOrder)
 {
   CSingleLock lock(m_critSection);
   m_iOrder = iOrder;
+}
+
+std::shared_ptr<CPVRProvider> CPVRChannel::GetDefaultProvider() const
+{
+  return CServiceBroker::GetPVRManager().Providers()->GetByClient(m_iClientId,
+                                                                  PVR_PROVIDER_INVALID_UID);
+}
+
+bool CPVRChannel::HasClientProvider() const
+{
+  CSingleLock lock(m_critSection);
+  return m_iClientProviderUid != PVR_PROVIDER_INVALID_UID;
+}
+
+std::shared_ptr<CPVRProvider> CPVRChannel::GetProvider() const
+{
+  return CServiceBroker::GetPVRManager().Providers()->GetByClient(m_iClientId,
+                                                                  m_iClientProviderUid);
 }
