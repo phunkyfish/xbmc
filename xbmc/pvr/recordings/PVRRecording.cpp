@@ -200,11 +200,59 @@ void CPVRRecording::Serialize(CVariant& value) const
   value["clientid"] = m_iClientId;
 }
 
+namespace
+{
+
+// std::string
+//   int m_iSeason;
+//   int m_iEpisode;
+  // int m_iSpecialSortSeason;
+  // int m_iSpecialSortEpisode;
+
+std::string GetSeasonEpisodeString(int iSeason, int iEpisode, int iSpecialSortSeason, int iSpecialSortEpisode)
+{
+  uint64_t num;
+  const CVariant &episodeSpecial = iSpecialSortEpisode;
+  const CVariant &seasonSpecial = iSpecialSortSeason;
+  if (!episodeSpecial.isNull() && !seasonSpecial.isNull() &&
+     (episodeSpecial.asInteger() > 0 || seasonSpecial.asInteger() > 0))
+    num = (static_cast<uint64_t>(seasonSpecial.asInteger()) << 32) + (episodeSpecial.asInteger() << 16) - ((2 << 15) - iEpisode);
+  else
+    num = (static_cast<uint64_t>(iSeason) << 32) + (iEpisode << 16);
+
+  return std::to_string(num);
+}
+
+}
+
+  // uint64_t num;
+  // const CVariant &episodeSpecial = values.at(FieldEpisodeNumberSpecialSort);
+  // const CVariant &seasonSpecial = values.at(FieldSeasonSpecialSort);
+  // if (!episodeSpecial.isNull() && !seasonSpecial.isNull() &&
+  //    (episodeSpecial.asInteger() > 0 || seasonSpecial.asInteger() > 0))
+  //   num = ((uint64_t)seasonSpecial.asInteger() << 32) + (episodeSpecial.asInteger() << 16) - ((2 << 15) - values.at(FieldEpisodeNumber).asInteger());
+  // else
+  //   num = ((uint64_t)values.at(FieldSeason).asInteger() << 32) + (values.at(FieldEpisodeNumber).asInteger() << 16);
+
+  // std::string title;
+  // if (values.find(FieldMediaType) != values.end() && values.at(FieldMediaType).asString() == MediaTypeMovie)
+  //   title = BySortTitle(attributes, values);
+  // if (title.empty())
+  //   title = ByLabel(attributes, values);
+
+  // return StringUtils::Format("{} {}", num, title);
+
 void CPVRRecording::ToSortable(SortItem& sortable, Field field) const
 {
+  CLog::Log(LOGWARNING, "CPVRRecording::ToSortable");
+
   CSingleLock lock(m_critSection);
   if (field == FieldSize)
     sortable[FieldSize] = m_sizeInBytes;
+  else if (field == FieldDate)
+    sortable[FieldDate] = RecordingTimeAsLocalTime().GetAsDBDateTime() + ' ' + m_strTitle;
+  else if (field == FieldEpisodeNumber)
+    sortable[FieldEpisodeNumber] = GetSeasonEpisodeString(m_iSeason, m_iEpisode, m_iSpecialSortSeason, m_iSpecialSortEpisode) + ' ' + RecordingTimeAsLocalTime().GetAsDBDateTime() + ' ' + m_strTitle;
   else
     CVideoInfoTag::ToSortable(sortable, field);
 }

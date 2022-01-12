@@ -14,6 +14,7 @@
 #include "utils/CharsetConverter.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
+#include "utils/log.h"
 
 #include <algorithm>
 #include <inttypes.h>
@@ -1012,6 +1013,9 @@ void SortUtils::Sort(SortBy sortBy, SortOrder sortOrder, SortAttribute attribute
         std::wstring sortLabel;
         g_charsetConverter.utf8ToW(preparator(attributes, **item), sortLabel, false);
         (*item)->insert(std::pair<Field, CVariant>(FieldSort, CVariant(sortLabel)));
+
+        std::string str( sortLabel.begin(), sortLabel.end() );
+        CLog::Log(LOGERROR, "XXX Sort String: {}", str.c_str());
       }
 
       // Do the sorting
