@@ -8,4 +8,17 @@ find_program(CLANG_FORMAT_EXECUTABLE clang-format)
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ClangFormat REQUIRED_VARS CLANG_FORMAT_EXECUTABLE)
 
+if(CLANGFORMAT_FOUND)
+
+  set(CLANGFORMAT_MINVERSION "9.0")
+
+  execute_process(COMMAND clang-format --version ERROR_QUIET OUTPUT_VARIABLE CLANG_FORMAT_VERSION_OUTPUT)
+  string(REGEX MATCH "([0-9]+)\\..*" CLANG_FORMAT_VERSION ${CLANG_FORMAT_VERSION_OUTPUT})
+  if(CLANG_FORMAT_VERSION VERSION_LESS_EQUAL ${CLANGFORMAT_MINVERSION})
+    message(WARNING "clang-format must be at least version ${CLANGFORMAT_MINVERSION}. The version found is ${CLANG_FORMAT_VERSION}")
+    set(CLANGFORMAT_FOUND OFF CACHE BOOL "" FORCE)
+    set(CLANG_FORMAT_EXECUTABLE "CLANG_FORMAT_EXECUTABLE-NOTFOUND" CACHE STRING "" FORCE)
+  endif()
+endif()
+
 mark_as_advanced(CLANG_FORMAT_EXECUTABLE)
