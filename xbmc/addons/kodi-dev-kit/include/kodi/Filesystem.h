@@ -2029,7 +2029,7 @@ public:
     // past the number of bytes read, we read (and skipped) a newline sequence.
     char buffer[1025];
     if (CPrivateBase::m_interface->toKodi->kodi_filesystem->read_file_string(
-            CPrivateBase::m_interface->toKodi->kodiBase, m_file, buffer, sizeof(buffer)))
+            CPrivateBase::m_interface->toKodi->kodiBase, m_file, buffer, sizeof(buffer) - 1))
     {
       line = buffer;
       return !line.empty();
