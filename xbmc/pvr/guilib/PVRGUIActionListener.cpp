@@ -35,6 +35,7 @@
 #include "settings/Settings.h"
 #include "settings/SettingsComponent.h"
 #include "settings/lib/Setting.h"
+#include "utils/log.h"
 
 #include <memory>
 #include <string>
@@ -104,6 +105,9 @@ bool CPVRGUIActionListener::OnAction(const CAction& action)
   bool bIsJumpSMS = false;
   bool bIsPlayingPVR = CServiceBroker::GetPVRManager().PlaybackState()->IsPlaying() &&
                        g_application.CurrentFileItem().HasPVRChannelInfoTag();
+
+  bool bIsPlayingEPGTag = CServiceBroker::GetPVRManager().PlaybackState()->IsPlaying() &&
+                          g_application.CurrentFileItem().HasEPGInfoTag();
 
   switch (action.GetID())
   {
@@ -232,20 +236,33 @@ bool CPVRGUIActionListener::OnAction(const CAction& action)
 
     case ACTION_NEXT_ITEM:
     {
-      if (!bIsPlayingPVR)
+      if (!bIsPlayingPVR && !bIsPlayingEPGTag)
         return false;
 
-      CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().SeekForward();
+      if (bIsPlayingPVR)
+        CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().SeekForward();
+      else
+      {
+        CLog::Log(LOGINFO, "XXX ACTION_NEXT_ITEM()");
+        CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().SkipForward();
+      }
       return true;
     }
 
     case ACTION_PREV_ITEM:
     {
-      if (!bIsPlayingPVR)
+      if (!bIsPlayingPVR && !bIsPlayingEPGTag)
         return false;
 
-      CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().SeekBackward(
-          CApplication::ACTION_PREV_ITEM_THRESHOLD);
+      if (bIsPlayingPVR)
+        CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().SeekBackward(
+            CApplication::ACTION_PREV_ITEM_THRESHOLD);
+      else
+      {
+        CLog::Log(LOGINFO, "XXX ACTION_PREV_ITEM()");
+        CServiceBroker::GetPVRManager().Get<PVR::GUI::Playback>().SkipBackward(
+            CApplication::ACTION_PREV_ITEM_THRESHOLD);
+      }
       return true;
     }
 

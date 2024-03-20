@@ -112,6 +112,22 @@ public:
    */
   void SeekBackward(unsigned int iThreshold);
 
+  /*!
+   * @brief Seek to the start of the next epg event for catchup streams, relative to the currently
+   * playing event. If there is no next event, seek to the end of the currently playing event where
+   * the stream will stop.
+   */
+  void SkipForward();
+
+  /*!
+   * @brief Seek to the start of the previous epg event for catchup streams, relative to the
+   * currently playing event or if there is no previous event or if playback time is greater than
+   * given threshold, seek to the start of the playing event.
+   * @param iThreshold the value in seconds to trigger seek to start of current event instead of
+   * start of previous event.
+   */
+  void SkipBackward(unsigned int iThreshold);
+
 private:
   CPVRGUIActionsPlayback(const CPVRGUIActionsPlayback&) = delete;
   CPVRGUIActionsPlayback const& operator=(CPVRGUIActionsPlayback const&) = delete;

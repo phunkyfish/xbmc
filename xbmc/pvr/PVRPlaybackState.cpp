@@ -363,12 +363,17 @@ void CPVRPlaybackState::StartPlayback(
         client->StreamClosed();
 
       client->GetChannelStreamProperties(item->GetPVRChannelInfoTag(), props, fromEpgAsLive);
+      CLog::Log(LOGERROR, "XXXXX Trying to play an EPG tag! 1");
 
       if (props.LivePlaybackAsEPG())
       {
+        CLog::Log(LOGERROR, "XXXXX Trying to play an EPG tag! 2");
         std::shared_ptr<CPVREpgInfoTag> epgTag = item->GetPVRChannelInfoTag()->GetEPGNow();
         if (epgTag)
+        {
+          CLog::Log(LOGERROR, "XXXXX Trying to play an EPG tag! 3");
           item = new CFileItem(epgTag);
+        }
       }
     }
     else if (item->IsPVRRecording())

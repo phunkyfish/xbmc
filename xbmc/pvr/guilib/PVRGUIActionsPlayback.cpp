@@ -313,6 +313,13 @@ bool CPVRGUIActionsPlayback::SwitchToChannel(const CFileItem& item, bool bCheckR
     if (!groupMember)
       return false;
 
+    // if (props.LivePlaybackAsEPG())
+    // {
+      // std::shared_ptr<CPVREpgInfoTag> epgTag = groupMember->Channel()->GetEPGNow();
+      // if (epgTag)
+      //   CFileItem* itemToPlay = new CFileItem(epgTag);
+    // }
+
     CServiceBroker::GetPVRManager().PlaybackState()->StartPlayback(new CFileItem(groupMember));
     CheckAndSwitchToFullscreen(bFullscreen);
     return true;
@@ -483,12 +490,15 @@ bool CPVRGUIActionsPlayback::PlayMedia(const CFileItem& item) const
 void CPVRGUIActionsPlayback::SeekForward()
 {
   time_t playbackStartTime = CServiceBroker::GetDataCacheCore().GetStartTime();
+  CLog::Log(LOGINFO, "XXX SeekFroward()1 : {}", playbackStartTime);
   if (playbackStartTime > 0)
   {
+  CLog::Log(LOGINFO, "XXX SeekFroward()2");
     const std::shared_ptr<const CPVRChannel> playingChannel =
         CServiceBroker::GetPVRManager().PlaybackState()->GetPlayingChannel();
     if (playingChannel)
     {
+  CLog::Log(LOGINFO, "XXX SeekFroward()3");
       time_t nextTime = 0;
       std::shared_ptr<CPVREpgInfoTag> next = playingChannel->GetEPGNext();
       if (next)
@@ -521,12 +531,15 @@ void CPVRGUIActionsPlayback::SeekForward()
 void CPVRGUIActionsPlayback::SeekBackward(unsigned int iThreshold)
 {
   time_t playbackStartTime = CServiceBroker::GetDataCacheCore().GetStartTime();
+  CLog::Log(LOGINFO, "XXX SeekBackward()1 : {}", playbackStartTime);
   if (playbackStartTime > 0)
   {
+  CLog::Log(LOGINFO, "XXX SeekBackward()2");
     const std::shared_ptr<const CPVRChannel> playingChannel =
         CServiceBroker::GetPVRManager().PlaybackState()->GetPlayingChannel();
     if (playingChannel)
     {
+  CLog::Log(LOGINFO, "XXX SeekBackward()3");
       time_t prevTime = 0;
       std::shared_ptr<CPVREpgInfoTag> prev = playingChannel->GetEPGNow();
       if (prev)
@@ -557,5 +570,26 @@ void CPVRGUIActionsPlayback::SeekBackward(unsigned int iThreshold)
       }
       CServiceBroker::GetAppMessenger()->PostMsg(TMSG_MEDIA_SEEK_TIME, seekTime);
     }
+  }
+}
+
+void CPVRGUIActionsPlayback::SkipForward()
+{
+  time_t playbackStartTime = CServiceBroker::GetDataCacheCore().GetStartTime();
+
+  if (playbackStartTime == 0)
+  {
+    CLog::Log(LOGINFO, "XXX SeekFroward()1 : {}", playbackStartTime);
+  }
+}
+
+void CPVRGUIActionsPlayback::SkipBackward(unsigned int iThreshold)
+{
+  time_t playbackStartTime = CServiceBroker::GetDataCacheCore().GetStartTime();
+
+  if (playbackStartTime == 0)
+  {
+  CLog::Log(LOGINFO, "XXX SeekBackward()1 : {}", playbackStartTime);
+
   }
 }
