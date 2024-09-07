@@ -139,13 +139,14 @@ extern "C"
   /// @brief **PVR related stream property values**\n
   /// This is used to pass additional data to Kodi on a given PVR stream.
   ///
-  /// Then transferred to livestream, recordings or EPG Tag stream using the
+  /// Then transferred to livestream, recordings, media or EPG Tag stream using the
   /// properties.
   ///
   /// This defines are used by:
   /// - @ref kodi::addon::CInstancePVRClient::GetChannelStreamProperties()
   /// - @ref kodi::addon::CInstancePVRClient::GetEPGTagStreamProperties()
   /// - @ref kodi::addon::CInstancePVRClient::GetRecordingStreamProperties()
+  /// - @ref kodi::addon::CInstancePVRClient::GetMediaTagStreamProperties()
   ///
   ///
   ///---------------------------------------------------------------------------
@@ -319,6 +320,11 @@ extern "C"
     bool bSupportsRecordingSize;
     bool bSupportsProviders;
     bool bSupportsRecordingsDelete;
+    bool bSupportsMedia;
+    bool bSupportsMediaTagPlayCount;
+    bool bSupportsMediaTagLastPlayedPosition;
+    bool bSupportsMediaTagEdl;
+    bool bSupportsMediaTagSize;
 
     unsigned int iRecordingsLifetimesSize;
     struct PVR_ATTRIBUTE_INT_VALUE* recordingsLifetimeValues;
